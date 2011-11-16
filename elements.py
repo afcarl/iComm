@@ -6,64 +6,56 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.QtSvg import *
 
-from Guis.ParameterInput import hybridParameterGui
+from Guis.ParameterGuis import hybridParameterGui
 
 class ElementFactory(QGraphicsSvgItem):
 
     # This class allows us to init a class from a string
     def __init__(self, parent, element, pos):
-        # remove all marks and "_" because our classes do not have these chars.
+        # parent  := parent obj which is always QGraphicsView for iComm
+        # element := string of the element class that we want to initilize
+        # pos     := element pos in QPointF form
         element = re.sub('(-|_)', '', element)
-
-        # check for the instance in __main__
         self.__class__ = getattr(sys.modules[__name__], element)
-
+# ------------------------------------------------------------------------------ Need to remove when element image are made
         # For testing only
         element = 'test'
         # For testing only
-
+# ------------------------------------------------------------------------------ Need to remove when element image are made
         self.__class__.__init__(self, parent, element, pos)
+
 
 class BaseElement(QGraphicsSvgItem):
 
     def __init__(self, parent, element, position):
-
-
-        self.tintColorList = ['green',  # selected/hovering/Pri
-                              'black',  # normal state
-                              'yellow', # search
-                              'orange', # 1st
-                              'blue',   # 2nd
-                              'red']    # issue
-
-        # pri image color
         self.image = os.path.join('Images', element.lower(), 'drawing.svg')
         super(BaseElement, self).__init__(self.image)
-        self.setImageColor('green')
+        self.setImageColor('green')     # set element selected color
 
-        self.linkId        = None
-        self.ueId          = None
-        self.eId           = self.ueId
-        self.linksFrom     = set()
-        self.linksTo       = set()
-        self.rd            = ''
-        self.orientation   = 0
-        self.parent        = parent
-        self.position      = self.imageCenterToMousePosition(position)
-        self.enteredDict   = {'id': self.eId}
+        self.parent        = parent     #                                        do I really need this?
+        self.ueId          = None       # unique ID assigned by the program
+        self.eId           = self.ueId  # custom ID assigned by the user
+        self.linksFrom     = set()      # RDs of elements upstream w/-J#
+        self.linksTo       = set()      # RDs of elements downstream w/-J#
+        self.rd            = ''         # RD in parent form
+        self.enteredDict   = {'id': self.eId} # gui widget entries
+        self.position      = self.setImageCenter(position)
 
+        # Monitor these flags
         self.setFlags(QGraphicsItem.ItemIsSelectable|
                       QGraphicsItem.ItemIsMovable|
                       QGraphicsItem.ItemSendsScenePositionChanges)
-
-        self.setPos(QPointF(parent.mapToScene(self.position)))
         self.setAcceptHoverEvents(True)
+        # map to local coordinates
+        self.setPos(parent.mapToScene(self.position))
 
 #------------------------------------------------------------------------------- Overrides
     def hoverEnterEvent(self, event):
+        # when mouse enters element change color
         self.setImageColor('green')
 
     def hoverLeaveEvent(self, event):
+        # when mouse leaves element change color back to normal
         self.setImageColor('black')
 #------------------------------------------------------------------------------- Overrides
 #                                                                                ---------
@@ -75,6 +67,13 @@ class BaseElement(QGraphicsSvgItem):
         self.gui = ParameterInputGui(self, parent, self.guiModule)
         self.freshGui = False
         return self.gui
+
+    def setImageCenter(self, pos):
+        # when we place an image, I want the center to be where the point of the
+        # mouse was and not the top left of the image.
+        self.x = pos.x() - self.boundingRect().width()/2
+        self.y = pos.y() - self.boundingRect().height()/2
+        return QPoint(self.x, self.y)
 #------------------------------------------------------------------------------- Sets
 #                                                                                ------
 #------------------------------------------------------------------------------- Custom
@@ -90,22 +89,19 @@ class BaseElement(QGraphicsSvgItem):
             self.position = value.toPoint()
         return QGraphicsItem.itemChange(self, change, value)
 
-    def imageCenterToMousePosition(self, pos):
-        # when we place an image, I want the center to be where the point of the
-        # mouse was and not the top left of the image.
-        self.x = pos.x() - self.boundingRect().width()/2
-        self.y = pos.y() - self.boundingRect().height()/2
-        return QPoint(self.x, self.y)
-#------------------------------------------------------------------------------- Custom
 
+#-------------------------------------------------------------------------------                    Move to another module?
 class ParameterInputGui(QWidget):
 
     def __init__(self, caller, parent, guiModule):
-
-        self.caller = caller
+        # caller    := object calling this class
+        # parent    := referance to objInspect
+        # guiModule := gui module that is associated with caller
         super(ParameterInputGui, self).__init__()
-        self.ui = guiModule.Ui_Form()
+        self.caller = caller # referance to the class calling
+        self.ui     = guiModule.Ui_Form()
         self.ui.setupUi(self)
+        # set widget to layout to allow for widget resizing
         parent.layout().addWidget(self)
 
         self.ui.Save.clicked.connect(self.clickedSave)
@@ -113,41 +109,38 @@ class ParameterInputGui(QWidget):
         self.ui.Delete.clicked.connect(self.clickedDelete)
 
         if caller.freshGui:
+            # if this is the first time we're placing the gui for this element
+            # we will clear the fields to build dict otherwise we'll set data
             self.clearFields()
         self.setData()
         self.show()
 
-
     def buildDict(self):
         pass
 
-
+#------------------------------------------------------------------------------- Clicks
     def clickedSave(self):
-        print 'Save clicked'
         dataDict = self.getData()
         self.caller.updateEnteredDict(dataDict)
 
-
     def clickedClear(self):
-        print 'Clear clicked'
         dataDict = self.clearFields()
         self.caller.updateEnteredDict(dataDict)
 
-
     def clickedDelete(self):
-        print 'Delete clicked'
         self.caller.userInputData('Delete')
-
-
+#------------------------------------------------------------------------------- Clicks
+#                                                                                -------------
+#------------------------------------------------------------------------------- Data handlers
     def setData(self):
         d = self.caller.enteredDict
         print d
         for child in self.children():
             if str(child.__class__.__name__) == 'QLineEdit':
                 child.setText(QString(d[str(child.objectName())]))
+
             if str(child.__class__.__name__) == 'QCheckBox':
                 child.setChecked(d[str(child.objectName())])
-
 
     def clearFields(self):
         dataDict = {}
@@ -155,33 +148,32 @@ class ParameterInputGui(QWidget):
             if str(child.__class__.__name__) == 'QLineEdit':
                 child.setText(QString(''))
                 dataDict[str(child.objectName())] = ''
-                
+
             if str(child.objectName()) == 'id':
                 child.setText(QString(self.caller.eId))
                 dataDict['id'] = self.caller.eId
-                
+
             if str(child.objectName()) == 'blockFromSearch':
                 child.setChecked(False)
                 dataDict[str(child.objectName())] = False
-                
         self.caller.updateEnteredDict(dataDict)
         return dataDict
-
 
     def getData(self):
         dataDict   = {}
         for child in self.children():
             if child.__class__.__name__ == 'QLineEdit':
                 dataDict[str(child.objectName())] = str(child.text())
+
             if child.__class__.__name__ == 'QCheckBox':
                 dataDict[str(child.objectName())] = child.isChecked()
         self.caller.updateEnteredDict(dataDict)
         return dataDict
+#-------------------------------------------------------------------------------                    Move to another module?
 
 
 class Mux(BaseElement):
     pass
-
 
 class Hybrids(BaseElement):
 
@@ -192,7 +184,6 @@ class Hybrids(BaseElement):
 
     def updateEnteredDict(self, data):
         self.enteredDict = data
-
 
 class LCamp(BaseElement):
     pass

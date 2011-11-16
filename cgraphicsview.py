@@ -133,11 +133,7 @@ class CGraphicsView(QGraphicsView):
         newImage = self.setElementId(newImage)
         self.scene.addItem(newImage)
         self.setElementId(newImage)
-
-
         self.setParameterInputGui(newImage)
-
-
 
     def setParameterInputGui(self, image):
 
@@ -150,9 +146,6 @@ class CGraphicsView(QGraphicsView):
         gui.setData()
         self.guiInInspector = gui
         self.iComm.ui.Inspector.setFixedWidth(gui.size().width())
-
-
-
 
     def setElementId(self, element):
         # set the eId of the element

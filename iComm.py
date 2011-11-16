@@ -28,35 +28,35 @@ class iComm(QMainWindow):
         self.centerOnScreen()
 
         self.view           = self.ui.GraphicsView
-        self.inspector      = self.ui.Inspector
-        self.pythonDock     = self.ui.Python
-        self.pyInterp       = self.ui.PyInterp
+        self.objInspect     = self.ui.Inspector     # dock for obj inspection
+        self.pyDock         = self.ui.Python        # dockWid that holds interp
+        self.pyInterp       = self.ui.PyInterp      # interpreter
 
-        self.inspector.hide()
+        self.objInspect.hide()
 
+        # pass locals from objects to interpreter to be in scope
         self.pyInterp.initInterpreter(locals())
         self.pyInterp.updateInterpreterLocals(self.view, 'view')
-        self.pyInterp.updateInterpreterLocals(self.inspector, 'inspector')
-        self.pyInterp.updateInterpreterLocals(self.pythonDock, 'pythonDock')
+        self.pyInterp.updateInterpreterLocals(self.objInspect, 'inspector')
+        self.pyInterp.updateInterpreterLocals(self.pyDock, 'pythonDock')
 
 
     def onViewTriggered(self, event):
-
+        # toggle between viewing object inspector and python interpreter
         if str(event.text()) == 'Python Console':
-            if self.pythonDock.isVisible():
-                self.pythonDock.hide()
+            if self.pyDock.isVisible():
+                self.pyDock.hide()
             else:
-                self.pythonDock.show()
+                self.pyDock.show()
 
         if str(event.text()) == 'Object Inspector':
-            if self.inspector.isVisible():
-                self.inspector.hide()
+            if self.objInspect.isVisible():
+                self.objInspect.hide()
             else:
-                self.inspector.show()
+                self.objInspect.show()
 
 
     def onElementsTriggered(self, event):
-
         # when any menu selection under Elements has been selected, change
         # the current active element to the selected element.
         iCommGlobals.elementClass = str(event.text())
@@ -67,7 +67,6 @@ class iComm(QMainWindow):
 
     def keyPressEvent(self, event):
         if event.text() == 'q':
-            print 'kill self...'
             sys.exit(1)
 
 #------------------------------------------------------------------------------- Testing
@@ -78,7 +77,7 @@ class iComm(QMainWindow):
 
         if event.text() == 't':
             tree = []
-            for x in self.elements():
+            for x in self.view.scene.items():
                 if not x.__class__.__name__ == 'Coax':
                     t = [(x.eId, y) for y in x.linksTo]
                     f = [(y, x.eId) for y in x.linksFrom]
