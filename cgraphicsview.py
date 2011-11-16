@@ -130,7 +130,6 @@ class CGraphicsView(QGraphicsView):
             self.scene.clearSelection()
 
         newImage.setSelected(True)
-        print 'new image added'
         newImage = self.setElementId(newImage)
         self.scene.addItem(newImage)
         self.setElementId(newImage)

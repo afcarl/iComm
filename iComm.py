@@ -23,15 +23,40 @@ class iComm(QMainWindow):
         self.ui.setupUi(self)
 
         # make connection with menuElements and function handler
-        self.ui.menuElements.triggered.connect(self.onMenuElementsTriggered)
+        self.ui.menuElements.triggered.connect(self.onElementsTriggered)
+        self.ui.menuView.triggered.connect(self.onViewTriggered)
         self.centerOnScreen()
 
-        self.ui.PyInterp.initInterpreter(locals())
-        self.ui.PyInterp.updateInterpreterLocals(self.ui.GraphicsView, 'view')
-        self.ui.PyInterp.updateInterpreterLocals(self.ui.Inspector, 'inspector')
+        self.view           = self.ui.GraphicsView
+        self.inspector      = self.ui.Inspector
+        self.pythonDock     = self.ui.Python
+        self.pyInterp       = self.ui.PyInterp
 
-    def onMenuElementsTriggered(self, event):
-        print dir(event)
+        self.inspector.hide()
+
+        self.pyInterp.initInterpreter(locals())
+        self.pyInterp.updateInterpreterLocals(self.view, 'view')
+        self.pyInterp.updateInterpreterLocals(self.inspector, 'inspector')
+        self.pyInterp.updateInterpreterLocals(self.pythonDock, 'pythonDock')
+
+
+    def onViewTriggered(self, event):
+
+        if str(event.text()) == 'Python Console':
+            if self.pythonDock.isVisible():
+                self.pythonDock.hide()
+            else:
+                self.pythonDock.show()
+
+        if str(event.text()) == 'Object Inspector':
+            if self.inspector.isVisible():
+                self.inspector.hide()
+            else:
+                self.inspector.show()
+
+
+    def onElementsTriggered(self, event):
+
         # when any menu selection under Elements has been selected, change
         # the current active element to the selected element.
         iCommGlobals.elementClass = str(event.text())
