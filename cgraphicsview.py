@@ -144,6 +144,7 @@ class CGraphicsView(QGraphicsView):
 
         if self.guiInInspector:
             # clear the gui that's in Inspector
+            self.guiInInspector.getData()
             self.guiInInspector.setParent(None)
 
         gui = image.setObjectGui(self.iComm.ui.Stack)
@@ -156,7 +157,7 @@ class CGraphicsView(QGraphicsView):
 
     def setElementId(self, element):
         # set the eId of the element
-        element.eId = len(self.scene.items())
+        element.eId = str(len(self.scene.items()))
         return element
 
     def checkForCollision(self, newImage):

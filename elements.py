@@ -73,6 +73,7 @@ class BaseElement(QGraphicsSvgItem):
 
     def setObjectGui(self, parent):
         self.gui = ParameterInputGui(self, parent, self.guiModule)
+        self.freshGui = False
         return self.gui
 #------------------------------------------------------------------------------- Sets
 #                                                                                ------
@@ -111,25 +112,26 @@ class ParameterInputGui(QWidget):
         self.ui.Clear.clicked.connect(self.clickedClear)
         self.ui.Delete.clicked.connect(self.clickedDelete)
 
-        self.buildDict()
+        if caller.freshGui:
+            self.clearFields()
         self.setData()
         self.show()
 
 
     def buildDict(self):
-        self.setData()
+        pass
 
 
     def clickedSave(self):
         print 'Save clicked'
-        dataDict = self.getEnteredData()
-        self.caller.userInputData(dataDict)
+        dataDict = self.getData()
+        self.caller.updateEnteredDict(dataDict)
 
 
     def clickedClear(self):
         print 'Clear clicked'
         dataDict = self.clearFields()
-        self.caller.userInputData(dataDict)
+        self.caller.updateEnteredDict(dataDict)
 
 
     def clickedDelete(self):
@@ -139,6 +141,7 @@ class ParameterInputGui(QWidget):
 
     def setData(self):
         d = self.caller.enteredDict
+        print d
         for child in self.children():
             if str(child.__class__.__name__) == 'QLineEdit':
                 child.setText(QString(d[str(child.objectName())]))
@@ -147,23 +150,32 @@ class ParameterInputGui(QWidget):
 
 
     def clearFields(self):
+        dataDict = {}
         for child in self.children():
             if str(child.__class__.__name__) == 'QLineEdit':
                 child.setText(QString(''))
+                dataDict[str(child.objectName())] = ''
+                
             if str(child.objectName()) == 'id':
-                child.setText(QString(str(self.caller.eId)))
+                child.setText(QString(self.caller.eId))
+                dataDict['id'] = self.caller.eId
+                
             if str(child.objectName()) == 'blockFromSearch':
                 child.setChecked(False)
-        return self.getEnteredData()
+                dataDict[str(child.objectName())] = False
+                
+        self.caller.updateEnteredDict(dataDict)
+        return dataDict
 
 
-    def getEnteredData(self):
+    def getData(self):
         dataDict   = {}
         for child in self.children():
             if child.__class__.__name__ == 'QLineEdit':
                 dataDict[str(child.objectName())] = str(child.text())
             if child.__class__.__name__ == 'QCheckBox':
                 dataDict[str(child.objectName())] = child.isChecked()
+        self.caller.updateEnteredDict(dataDict)
         return dataDict
 
 
@@ -176,8 +188,9 @@ class Hybrids(BaseElement):
     def __init__(self, *args):
         super(Hybrids, self).__init__(args[0], args[1], args[2])
         self.guiModule = hybridParameterGui
+        self.freshGui = True
 
-    def userInputData(self, data):
+    def updateEnteredDict(self, data):
         self.enteredDict = data
 
 
