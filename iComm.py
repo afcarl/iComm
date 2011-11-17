@@ -40,8 +40,8 @@ class iComm(QMainWindow):
         self.pyInterp.updateInterpreterLocals(self.objInspect, 'inspector')
         self.pyInterp.updateInterpreterLocals(self.pyDock, 'pythonDock')
 
-
     def onViewTriggered(self, event):
+
         # toggle between viewing object inspector and python interpreter
         if str(event.text()) == 'Python Console':
             if self.pyDock.isVisible():
@@ -55,8 +55,20 @@ class iComm(QMainWindow):
             else:
                 self.objInspect.show()
 
+    def getMenuBacktrack(self, event):
+        # take the event and backtrack through parents getting the title
+        # along the way to get list of sub menus used.
+        backtrack = [str(event.text())]
+        previousWidget = event.associatedWidgets()[0]
+        while previousWidget.__class__.__name__ != 'QMenuBar':
+            backtrack.append(str(previousWidget.title()))
+            previousWidget = previousWidget.parent()
+        return backtrack
 
     def onElementsTriggered(self, event):
+        
+        print self.getMenuBacktrack(event)
+        
         # when any menu selection under Elements has been selected, change
         # the current active element to the selected element.
         iCommGlobals.elementClass = str(event.text())

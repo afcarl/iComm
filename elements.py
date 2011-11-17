@@ -17,11 +17,11 @@ class ElementFactory(QGraphicsSvgItem):
         # pos     := element pos in QPointF form
         element = re.sub('(-|_)', '', element)
         self.__class__ = getattr(sys.modules[__name__], element)
-# ------------------------------------------------------------------------------ Need to remove when element image are made
+# ------------------------------------------------------------------------------ remove when element images are made
         # For testing only
         element = 'test'
         # For testing only
-# ------------------------------------------------------------------------------ Need to remove when element image are made
+# ------------------------------------------------------------------------------ remove when element images are made
         self.__class__.__init__(self, parent, element, pos)
 
 
@@ -90,7 +90,7 @@ class BaseElement(QGraphicsSvgItem):
         return QGraphicsItem.itemChange(self, change, value)
 
 
-#-------------------------------------------------------------------------------                    Move to another module?
+#-------------------------------------------------------------------------------               Move to another module? v
 class ParameterInputGui(QWidget):
 
     def __init__(self, caller, parent, guiModule):
@@ -169,7 +169,7 @@ class ParameterInputGui(QWidget):
                 dataDict[str(child.objectName())] = child.isChecked()
         self.caller.updateEnteredDict(dataDict)
         return dataDict
-#-------------------------------------------------------------------------------                    Move to another module?
+#-------------------------------------------------------------------------------               Move to another module? ^
 
 
 class Mux(BaseElement):
