@@ -21,7 +21,7 @@ class CGraphicsView(QGraphicsView):
         # click to drag, we would have placed an image on the screen.  Now we
         # check to see if the two positions are == and if so then place the
         # image otherwise don't an allow dragging.
-        self.mousePressPosition = None
+        self.mousePressPosition   = None
         self.mouseReleasePosition = None
         # keeps a list of selectedItems which is populated with
         # self.scene.selectedItems().  We save this number for this case: if we
@@ -29,48 +29,85 @@ class CGraphicsView(QGraphicsView):
         # deselect the group and not place an image down.  This makes the
         # program more transparent to other programs deselection process.
         self.selectedItemHistory = []
-        self.startElement = None
-        self.stopElement = None
+        self.startElement        = None
+        self.stopElement         = None
+        self.guiInInspector      = None
 
-        self.guiInInspector = None
-
+#------------------------------------------------------------------------------# mousePressEvent
     def mousePressEvent(self, event):
+        super(CGraphicsView, self).mousePressEvent(event)
         if iCommGlobals.mode == 'draw':
-            super(CGraphicsView, self).mousePressEvent(event)
-            self.mousePressPosition = event.pos()
+            self.mousePressEvent_Draw(event)
         elif iCommGlobals.mode == 'link':
+            self.mousePressEvent_Link(event)
 
-            if self.scene.items(QPointF(event.pos())):
-                self.startElement = self.scene.items(QPointF(event.pos()))[0]
-            else:
-                self.startElement = None
+    def mousePressEvent_Draw(self, event):
+        self.mousePressPosition = event.pos()        
 
-
+    def mousePressEvent_Link(self, event):
+        if self.scene.items(QPointF(event.pos())):
+            self.p1 = QPointF(event.pos())
+            self.x1 = event.pos().x()
+            self.y1 = event.pos().y()
+            self.startElement = self.scene.items(self.p1)[0]
+            self.line = self.makeLine()
+        else:
+            self.startElement = None
+#------------------------------------------------------------------------------# mousePressEvent
+#       
+#------------------------------------------------------------------------------# mouseReleaseEvent
     def mouseReleaseEvent(self, event):
+        super(CGraphicsView, self).mouseReleaseEvent(event)
         if iCommGlobals.mode == 'draw':
-            super(CGraphicsView, self).mouseReleaseEvent(event)
-            self.mouseReleasePosition = event.pos()
-            self.imageControl()
-            self.selectedItemHistory = self.scene.selectedItems()
-
+            self.mouseReleaseEvent_Draw(event)
         elif iCommGlobals.mode == 'link':
-            if self.startElement and self.scene.items(QPointF(event.pos())):
-                self.stopElement = self.scene.items(QPointF(event.pos()))[0]
-            else:
-                return None
+            self.mouseReleaseEvent_Link(event)
+        
+    def mouseReleaseEvent_Draw(self, event):
+        self.mouseReleasePosition = event.pos()
+        self.imageControl()
+        self.selectedItemHistory = self.scene.selectedItems()
 
-            linePoints = self.setLineToImagePortPosition()
+    def mouseReleaseEvent_Link(self, event):
+        # attempted to make a link from nothing to somehting/nothing
+        # can't be done, must start from an element
+        try:
+            module = self.scene.items(QPointF(event.pos()))[0].__module__
+            self.stopElement = self.scene.items(QPointF(event.pos()))[0]
+        except IndexError:
+            return
+        # link started from an element and went to another element.
+        if module == 'elements' and self.startElement != self.stopElement:
+            self.stopElement  = self.scene.items(QPointF(event.pos()))[0]
             self.setElementLinks()
-            link = links.LinkFactory(self,
-                              iCommGlobals.elementClass,
-                              linePoints['Start'],
-                              linePoints['Stop'])
-            self.scene.addItem(link)
+            self.line         = None
+            self.startElement = None
+            
+        # link ended on link element, remove it
+        elif module == 'links':
+            self.scene.removeItem(self.line)
+            self.startElement = None
+        # link went to same element, remove it
+        elif self.startElement == self.stopElement:
+            self.scene.removeItem(self.line)
+            
+#------------------------------------------------------------------------------# mouseReleaseEvent
+#
+#------------------------------------------------------------------------------# mouseMoveEvent
+    def mouseMoveEvent(self, event):
+        if self.startElement:            
+            x2 = event.pos().x()
+            y2 = event.pos().y()
+            self.line.setLine(self.x1, self.y1, x2, y2)
+            return None
+        super(CGraphicsView, self).mouseMoveEvent(event)
+#------------------------------------------------------------------------------# mouseMoveEvent
 
     def setElementLinks(self):
-
         self.startElement.updateLinksTo(self.stopElement.eId)
+        self.startElement.outerLinks.append(('P1', self.line))
         self.stopElement.updateLinksFrom(self.startElement.eId)
+        self.stopElement.outerLinks.append(('P2', self.line))
 
 #------------------------------------------------------------------------------# Move to links.py
     def setLineToImagePortPosition(self):
@@ -87,6 +124,12 @@ class CGraphicsView(QGraphicsView):
 
         points = [newPoints(x) for x in (self.startElement, self.stopElement)]
         return dict(zip(('Start', 'Stop'), points))
+
+    def makeLine(self):
+        #linePoints = self.setLineToImagePortPosition()
+        line = links.LinkFactory(self, iCommGlobals.elementClass, self.p1)
+        self.scene.addItem(line)
+        return line
 
     def mousePositionTolerance(self):
         tolerance = 5 # pixels

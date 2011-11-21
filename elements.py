@@ -41,6 +41,8 @@ class BaseElement(QGraphicsSvgItem):
         self.enteredDict   = {'id': self.eId} # gui widget entries
         self.position      = self.setImageCenter(position)
 
+        self.outerLinks    = [] # link object refgerance between elements
+
         # Monitor these flags
         self.setFlags(QGraphicsItem.ItemIsSelectable|
                       QGraphicsItem.ItemIsMovable|
@@ -86,9 +88,22 @@ class BaseElement(QGraphicsSvgItem):
     def itemChange(self, change, value):
         # whenever an item has changed we need to update the position
         if change == QGraphicsItem.ItemScenePositionHasChanged:
+
+            self.test = value
+
+            self.updateLinkPositions(value)
+            
             self.position = value.toPoint()
         return QGraphicsItem.itemChange(self, change, value)
 
+    def updateLinkPositions(self, value):
+        valuePoint = value.toPoint()
+        dx = valuePoint.x() - self.position.x()
+        dy = valuePoint.y() - self.position.y()
+        for side, link in self.outerLinks:
+            func = size.lower() + '()'
+            point = getattr(link, func)
+            print point
 
 #-------------------------------------------------------------------------------               Move to another module? v
 class ParameterInputGui(QWidget):
