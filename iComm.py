@@ -66,9 +66,9 @@ class iComm(QMainWindow):
         return backtrack
 
     def onElementsTriggered(self, event):
-        
+
         print self.getMenuBacktrack(event)
-       
+
         # when any menu selection under Elements has been selected, change
         # the current active element to the selected element.
         iCommGlobals.elementClass = str(event.text())

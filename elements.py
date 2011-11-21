@@ -88,22 +88,28 @@ class BaseElement(QGraphicsSvgItem):
     def itemChange(self, change, value):
         # whenever an item has changed we need to update the position
         if change == QGraphicsItem.ItemScenePositionHasChanged:
-
-            self.test = value
-
             self.updateLinkPositions(value)
-            
             self.position = value.toPoint()
         return QGraphicsItem.itemChange(self, change, value)
 
     def updateLinkPositions(self, value):
-        valuePoint = value.toPoint()
+
+        self.tValue = value     #----------------------------------------------- TESTING
+
+        valuePoint = value.toPointF()
         dx = valuePoint.x() - self.position.x()
         dy = valuePoint.y() - self.position.y()
+        delta = QPointF(dx, dy)
+
+
         for side, link in self.outerLinks:
-            func = size.lower() + '()'
-            point = getattr(link, func)
-            print point
+
+            self.tlink = link   #----------------------------------------------- TESTING
+
+            linePoint = getattr(link.line, side.lower()).__call__()
+            newPoint = linePoint + delta
+            getattr(link.line, 'set' + side).__call__(newPoint)
+            link.setLine(link.line)
 
 #-------------------------------------------------------------------------------               Move to another module? v
 class ParameterInputGui(QWidget):

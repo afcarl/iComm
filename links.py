@@ -30,8 +30,8 @@ class BaseLink(QGraphicsLineItem):
 
         self.color = Qt.white
 
-        self.setFlags(QGraphicsItem.ItemIsSelectable|
-                      QGraphicsItem.ItemIsMovable|
+#QGraphicsItem.ItemIsSelectable|
+        self.setFlags(QGraphicsItem.ItemIsMovable|
                       QGraphicsItem.ItemSendsScenePositionChanges)
 
         self.setZValue(-1)
@@ -46,7 +46,8 @@ class BaseLink(QGraphicsLineItem):
     def itemChange(self, change, value):
         # whenever an item has changed we need to take now and update the position
         if change == QGraphicsItem.ItemScenePositionHasChanged:
-            self.position = value.toPoint()
+            self.stop = value.toPoint()
+            self.line = QLineF(self.start, self.stop)
         return QGraphicsItem.itemChange(self, change, value)
 
     def setImageHighlighting(self, condition, color=Qt.green):
@@ -57,7 +58,7 @@ class BaseLink(QGraphicsLineItem):
         else:
             self.color = Qt.white
             self.update()
-        
+
 class Coax(BaseLink):
     print 'Making coax link'
     pass

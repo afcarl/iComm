@@ -42,7 +42,7 @@ class CGraphicsView(QGraphicsView):
             self.mousePressEvent_Link(event)
 
     def mousePressEvent_Draw(self, event):
-        self.mousePressPosition = event.pos()        
+        self.mousePressPosition = event.pos()
 
     def mousePressEvent_Link(self, event):
         if self.scene.items(QPointF(event.pos())):
@@ -54,7 +54,7 @@ class CGraphicsView(QGraphicsView):
         else:
             self.startElement = None
 #------------------------------------------------------------------------------# mousePressEvent
-#       
+#
 #------------------------------------------------------------------------------# mouseReleaseEvent
     def mouseReleaseEvent(self, event):
         super(CGraphicsView, self).mouseReleaseEvent(event)
@@ -62,7 +62,7 @@ class CGraphicsView(QGraphicsView):
             self.mouseReleaseEvent_Draw(event)
         elif iCommGlobals.mode == 'link':
             self.mouseReleaseEvent_Link(event)
-        
+
     def mouseReleaseEvent_Draw(self, event):
         self.mouseReleasePosition = event.pos()
         self.imageControl()
@@ -79,10 +79,12 @@ class CGraphicsView(QGraphicsView):
         # link started from an element and went to another element.
         if module == 'elements' and self.startElement != self.stopElement:
             self.stopElement  = self.scene.items(QPointF(event.pos()))[0]
+            print self.line.line.setP2(QPointF(event.pos()))
+            self.test = self.line
             self.setElementLinks()
             self.line         = None
             self.startElement = None
-            
+
         # link ended on link element, remove it
         elif module == 'links':
             self.scene.removeItem(self.line)
@@ -90,12 +92,14 @@ class CGraphicsView(QGraphicsView):
         # link went to same element, remove it
         elif self.startElement == self.stopElement:
             self.scene.removeItem(self.line)
-            
+            self.line         = None
+            self.startElement = None
+
 #------------------------------------------------------------------------------# mouseReleaseEvent
 #
 #------------------------------------------------------------------------------# mouseMoveEvent
     def mouseMoveEvent(self, event):
-        if self.startElement:            
+        if self.startElement:
             x2 = event.pos().x()
             y2 = event.pos().y()
             self.line.setLine(self.x1, self.y1, x2, y2)
