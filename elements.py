@@ -17,11 +17,11 @@ class ElementFactory(QGraphicsSvgItem):
         # pos     := element pos in QPointF form
         element = re.sub('(-|_)', '', element)
         self.__class__ = getattr(sys.modules[__name__], element)
-# ------------------------------------------------------------------------------ remove when element images are made
+# -----------------------------------------------------------------------------# remove when element images are made
         # For testing only
-        element = 'test'
+        element = 'test_switch'
         # For testing only
-# ------------------------------------------------------------------------------ remove when element images are made
+# -----------------------------------------------------------------------------# remove when element images are made
         self.__class__.__init__(self, parent, element, pos)
 
 
@@ -32,16 +32,16 @@ class BaseElement(QGraphicsSvgItem):
         super(BaseElement, self).__init__(self.image)
         self.setImageColor('green')     # set element selected color
 
-        self.parent        = parent     #                                        do I really need this?
-        self.ueId          = None       # unique ID assigned by the program
-        self.eId           = self.ueId  # custom ID assigned by the user
-        self.linksFrom     = set()      # RDs of elements upstream w/-J#
-        self.linksTo       = set()      # RDs of elements downstream w/-J#
-        self.rd            = ''         # RD in parent form
-        self.enteredDict   = {'id': self.eId} # gui widget entries
-        self.position      = self.setImageCenter(position)
-
-        self.outerLinks    = [] # link object refgerance between elements
+        self.parent      = parent
+        self.ueId        = None       # unique ID assigned by the program
+        self.eId         = self.ueId  # custom ID assigned by the user
+        self.linksFrom   = set()      # RDs of elements upstream w/-J#
+        self.linksTo     = set()      # RDs of elements downstream w/-J#
+        self.rd          = ''         # RD in parent form
+        self.enteredDict = {'id': self.eId} # gui widget entries
+        self.position    = self.setImageCenter(position)
+        self.outerLinks  = []   # link object refgerance between elements
+        self.currentPort = None # post that the mouse is over
 
         # Monitor these flags
         self.setFlags(QGraphicsItem.ItemIsSelectable|
@@ -51,17 +51,21 @@ class BaseElement(QGraphicsSvgItem):
         # map to local coordinates
         self.setPos(parent.mapToScene(self.position))
 
-#------------------------------------------------------------------------------- Overrides
+#------------------------------------------------------------------------------# Overrides
     def hoverEnterEvent(self, event):
         # when mouse enters element change color
         self.setImageColor('green')
 
+    def hoverMoveEvent(self, event):
+        # check when the mouse is hovering over a port
+        self.checkPortHover(event)
+
     def hoverLeaveEvent(self, event):
         # when mouse leaves element change color back to normal
         self.setImageColor('black')
-#------------------------------------------------------------------------------- Overrides
-#                                                                                ---------
-#------------------------------------------------------------------------------- Sets
+#------------------------------------------------------------------------------# Overrides
+#                                                                              # ---------
+#------------------------------------------------------------------------------# Sets
     def setImageColor(self, color):
         self.setElementId(QString(color))
 
@@ -76,9 +80,9 @@ class BaseElement(QGraphicsSvgItem):
         self.x = pos.x() - self.boundingRect().width()/2
         self.y = pos.y() - self.boundingRect().height()/2
         return QPoint(self.x, self.y)
-#------------------------------------------------------------------------------- Sets
-#                                                                                ------
-#------------------------------------------------------------------------------- Custom
+#------------------------------------------------------------------------------# Sets
+#                                                                              # ------
+#------------------------------------------------------------------------------# Custom
     def updateLinksTo(self, toEId):
         self.linksTo = set(tuple(self.linksTo) + (toEId,))
 
@@ -89,29 +93,34 @@ class BaseElement(QGraphicsSvgItem):
         # whenever an item has changed we need to update the position
         if change == QGraphicsItem.ItemScenePositionHasChanged:
             self.updateLinkPositions(value)
-            self.position = value.toPoint()
+            self.position = value.toPoint() # update image position
         return QGraphicsItem.itemChange(self, change, value)
 
     def updateLinkPositions(self, value):
-
-        self.tValue = value     #----------------------------------------------- TESTING
-
+        # should look into setting line as child item to element, if possible,
+        # this may simplify line update.
         valuePoint = value.toPointF()
         dx = valuePoint.x() - self.position.x()
         dy = valuePoint.y() - self.position.y()
         delta = QPointF(dx, dy)
-
-
         for side, link in self.outerLinks:
-
-            self.tlink = link   #----------------------------------------------- TESTING
-
             linePoint = getattr(link.line, side.lower()).__call__()
             newPoint = linePoint + delta
             getattr(link.line, 'set' + side).__call__(newPoint)
+            # must setLine otherwise P2 will be set as P1 on element move
             link.setLine(link.line)
 
-#-------------------------------------------------------------------------------               Move to another module? v
+    def checkPortHover(self, event):
+        point = event.pos()
+        for port in self.portLocations:
+            if port[1].contains(point):
+                self.setElementId(QString(port[0]))
+                self.currentPort = port[0]
+                return
+        self.setElementId(QString('center'))
+        self.currentPort = None
+
+#------------------------------------------------------------------------------#               Move to another module? v
 class ParameterInputGui(QWidget):
 
     def __init__(self, caller, parent, guiModule):
@@ -190,7 +199,7 @@ class ParameterInputGui(QWidget):
                 dataDict[str(child.objectName())] = child.isChecked()
         self.caller.updateEnteredDict(dataDict)
         return dataDict
-#-------------------------------------------------------------------------------               Move to another module? ^
+#------------------------------------------------------------------------------#               Move to another module? ^
 
 
 class Mux(BaseElement):
@@ -200,8 +209,20 @@ class Hybrids(BaseElement):
 
     def __init__(self, *args):
         super(Hybrids, self).__init__(args[0], args[1], args[2])
-        self.guiModule = hybridParameterGui
-        self.freshGui = True
+        self.guiModule     = hybridParameterGui
+        self.freshGui      = True
+        self.portLocations = self.getPortLocations()
+
+    def getPortLocations(self):
+        # rect of the ports relative to the image in image coordinates.        # portLocations for for switches
+        # user QPointF because event.pos == QPointF and rect.contains needs F
+        #                                   x   y  w  h
+        portLocations = [('bottom', QRectF(10, 20, 9, 9)),
+                         ('right' , QRectF(20, 10, 9, 9)),
+                         ('top'   , QRectF(10,  0, 9, 9)),
+                         ('left'  , QRectF( 0, 10, 9, 9))]
+        return portLocations
+#------------------------------------------------------------------------------# portLocations for for switches
 
     def updateEnteredDict(self, data):
         self.enteredDict = data

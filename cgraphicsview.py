@@ -45,7 +45,8 @@ class CGraphicsView(QGraphicsView):
         self.mousePressPosition = event.pos()
 
     def mousePressEvent_Link(self, event):
-        if self.scene.items(QPointF(event.pos())):
+        item = self.scene.items(QPointF(event.pos()))
+        if item and item[0].currentPort:
             self.p1 = QPointF(event.pos())
             self.x1 = event.pos().x()
             self.y1 = event.pos().y()
@@ -79,8 +80,6 @@ class CGraphicsView(QGraphicsView):
         # link started from an element and went to another element.
         if module == 'elements' and self.startElement != self.stopElement:
             self.stopElement  = self.scene.items(QPointF(event.pos()))[0]
-            print self.line.line.setP2(QPointF(event.pos()))
-            self.test = self.line
             self.setElementLinks()
             self.line         = None
             self.startElement = None
@@ -99,12 +98,13 @@ class CGraphicsView(QGraphicsView):
 #
 #------------------------------------------------------------------------------# mouseMoveEvent
     def mouseMoveEvent(self, event):
+        super(CGraphicsView, self).mouseMoveEvent(event)
         if self.startElement:
             x2 = event.pos().x()
             y2 = event.pos().y()
             self.line.setLine(self.x1, self.y1, x2, y2)
             return None
-        super(CGraphicsView, self).mouseMoveEvent(event)
+
 #------------------------------------------------------------------------------# mouseMoveEvent
 
     def setElementLinks(self):

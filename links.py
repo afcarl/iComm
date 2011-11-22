@@ -27,13 +27,10 @@ class BaseLink(QGraphicsLineItem):
         self.rd            = ''
         self.parent        = parent
         self.isHighlighted = True
+        self.currentPort   = None
 
         self.color = Qt.white
-
-#QGraphicsItem.ItemIsSelectable|
-        self.setFlags(QGraphicsItem.ItemIsMovable|
-                      QGraphicsItem.ItemSendsScenePositionChanges)
-
+        self.setFlags(QGraphicsItem.ItemSendsScenePositionChanges)
         self.setZValue(-1)
 
         self._setPen(self.color, 3)
@@ -42,13 +39,6 @@ class BaseLink(QGraphicsLineItem):
         brush = QBrush(color)
         pen   = QPen(brush, width)
         self.setPen(pen)
-
-    def itemChange(self, change, value):
-        # whenever an item has changed we need to take now and update the position
-        if change == QGraphicsItem.ItemScenePositionHasChanged:
-            self.stop = value.toPoint()
-            self.line = QLineF(self.start, self.stop)
-        return QGraphicsItem.itemChange(self, change, value)
 
     def setImageHighlighting(self, condition, color=Qt.green):
         self.isHighlighted = condition
@@ -60,9 +50,7 @@ class BaseLink(QGraphicsLineItem):
             self.update()
 
 class Coax(BaseLink):
-    print 'Making coax link'
     pass
 
 class Waveguide(BaseLink):
-    print 'Making waveguid link'
     pass

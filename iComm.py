@@ -27,10 +27,11 @@ class iComm(QMainWindow):
         self.ui.menuView.triggered.connect(self.onViewTriggered)
         self.centerOnScreen()
 
-        self.view           = self.ui.GraphicsView
-        self.objInspect     = self.ui.Inspector     # dock for obj inspection
-        self.pyDock         = self.ui.Python        # dockWid that holds interp
-        self.pyInterp       = self.ui.PyInterp      # interpreter
+        self.view       = self.ui.GraphicsView
+        self.objInspect = self.ui.Inspector     # dock for obj inspection
+        self.pyDock     = self.ui.Python        # dockWid that holds interp
+        self.pyInterp   = self.ui.PyInterp      # interpreter
+        self.statusBar  = self.ui.statusbar
 
         self.objInspect.hide()
 
@@ -102,14 +103,25 @@ class iComm(QMainWindow):
         if event.key() == Qt.Key_S:
             iCommGlobals.elementClass = 'Hybrids'
             iCommGlobals.mode = 'draw'
+            self.statusBar.showMessage(QString('Mode: Edit'))
+            self.setMovabilityFlag(True)
 
         if event.key() == Qt.Key_C:
             iCommGlobals.elementClass = 'Coax'
             iCommGlobals.mode = 'link'
+            self.statusBar.showMessage(QString('Mode: Link'))
+            self.setMovabilityFlag(False)
 
         if event.key() == Qt.Key_F1:
             print 'test F1'
 #------------------------------------------------------------------------------- Testing
+
+    def setMovabilityFlag(self, bool):
+        # toggle the movability of elements
+        # we don't want elements to be moved when in link mode
+        items = self.view.scene.items()
+        items = filter(lambda x: x.__module__ == 'elements', items)
+        map(lambda x: x.setFlag(QGraphicsItem.ItemIsMovable, bool), items)
 
     def centerOnScreen(self):
         resolution = QDesktopWidget().screenGeometry()
@@ -122,6 +134,7 @@ class RunGui():
         app = QApplication(sys.argv)
         myapp = iComm()
         myapp.show()
+        app.setStyle(QStyleFactory.create("plastique"))
         sys.exit(app.exec_())
 
 if __name__ == "__main__":
