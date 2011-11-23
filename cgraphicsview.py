@@ -55,7 +55,7 @@ class CGraphicsView(QGraphicsView):
         else:
             self.startElement = None
 #------------------------------------------------------------------------------# mousePressEvent
-#
+#                                                                              # -----------------
 #------------------------------------------------------------------------------# mouseReleaseEvent
     def mouseReleaseEvent(self, event):
         super(CGraphicsView, self).mouseReleaseEvent(event)
@@ -95,14 +95,15 @@ class CGraphicsView(QGraphicsView):
             self.startElement = None
 
 #------------------------------------------------------------------------------# mouseReleaseEvent
-#
+#                                                                              # -----------------
 #------------------------------------------------------------------------------# mouseMoveEvent
     def mouseMoveEvent(self, event):
         super(CGraphicsView, self).mouseMoveEvent(event)
         if self.startElement:
             x2 = event.pos().x()
             y2 = event.pos().y()
-            self.line.setLine(self.x1, self.y1, x2, y2)
+            self.line.line.setP2(QPointF(x2, y2))
+            self.line.setLine(self.line.line)
             return None
 
 #------------------------------------------------------------------------------# mouseMoveEvent
