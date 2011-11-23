@@ -3,31 +3,6 @@ from PyQt4.QtCore import *
 import math
 import sys
 
-class countcalls(object):
-   "Decorator that keeps track of the number of times a function is called."
-
-   __instances = {}
-
-   def __init__(self, f):
-      self.__f = f
-      self.__numcalls = 0
-      countcalls.__instances[f] = self
-
-   def __call__(self, *args, **kwargs):
-      self.__numcalls += 1
-      print self.__numcalls
-      return self.__f(*args, **kwargs)
-
-   def count(self):
-      "Return the number of times the function f was called."
-      return countcalls.__instances[self.__f].__numcalls
-
-   @staticmethod
-   def counts():
-      "Return a dict of {function: # of calls} for all registered functions."
-      return dict([(f.__name__, countcalls.__instances[f].__numcalls) for f in countcalls.__instances])
-
-
 class Main(QWidget):
 
     def __init__(self, parent):
@@ -50,7 +25,7 @@ class View(QGraphicsView):
         self.setMouseTracking(True)
 
         self.click = 'start'
-        
+
     def setBackgroundColor(self, bgColor):
         brush = QBrush(bgColor)
         brush.setStyle(Qt.SolidPattern)
@@ -84,14 +59,14 @@ class View(QGraphicsView):
 
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Shift:
-            self.snapLines = False        
+            self.snapLines = False
 
 class Line(QGraphicsLineItem):
 
     def __init__(self, parent, p1):
         # args = start, stop
         p1 = QPointF(parent.mapToScene(p1))
-        self.line = QLineF(p1, p1)  
+        self.line = QLineF(p1, p1)
         super(Line, self).__init__(self.line)
 
         self._setPen(Qt.green, 5)
@@ -104,5 +79,5 @@ def run():
     a   = Main(None)
     a.show()
     sys.exit(app.exec_())
-    
+
 run()

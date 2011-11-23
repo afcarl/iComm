@@ -37,20 +37,20 @@ class iComm(QMainWindow):
 
         # pass locals from objects to interpreter to be in scope
         self.pyInterp.initInterpreter(locals())
-        self.pyInterp.updateInterpreterLocals(self.view, 'view')
-        self.pyInterp.updateInterpreterLocals(self.objInspect, 'inspector')
-        self.pyInterp.updateInterpreterLocals(self.pyDock, 'pythonDock')
+        self.pyInterp.updateInterpreterLocals(self.view, "view")
+        self.pyInterp.updateInterpreterLocals(self.objInspect, "inspector")
+        self.pyInterp.updateInterpreterLocals(self.pyDock, "pythonDock")
 
     def onViewTriggered(self, event):
 
         # toggle between viewing object inspector and python interpreter
-        if str(event.text()) == 'Python Console':
+        if str(event.text()) == "Python Console":
             if self.pyDock.isVisible():
                 self.pyDock.hide()
             else:
                 self.pyDock.show()
 
-        if str(event.text()) == 'Object Inspector':
+        if str(event.text()) == "Object Inspector":
             if self.objInspect.isVisible():
                 self.objInspect.hide()
             else:
@@ -61,7 +61,7 @@ class iComm(QMainWindow):
         # along the way to get list of sub menus used.
         backtrack = [str(event.text())]
         previousWidget = event.associatedWidgets()[0]
-        while previousWidget.__class__.__name__ != 'QMenuBar':
+        while previousWidget.__class__.__name__ != "QMenuBar":
             backtrack.append(str(previousWidget.title()))
             previousWidget = previousWidget.parent()
         return backtrack
@@ -73,25 +73,25 @@ class iComm(QMainWindow):
         # when any menu selection under Elements has been selected, change
         # the current active element to the selected element.
         iCommGlobals.elementClass = str(event.text())
-        if filter(lambda x: x == iCommGlobals.elementClass, ['Waveguide', 'Coax']):
-            iCommGlobals.mode = 'link'
+        if filter(lambda x: x == iCommGlobals.elementClass, ["Waveguide", "Coax"]):
+            iCommGlobals.mode = "link"
         else:
-            iCommGlobals.mode = 'draw'
+            iCommGlobals.mode = "draw"
 
     def keyPressEvent(self, event):
-        if event.text() == 'q':
+        if event.text() == "q":
             sys.exit(1)
 
 #------------------------------------------------------------------------------- Testing
-        if event.text() == 'e':
+        if event.text() == "e":
             for x in self.elements():
                 print x.__class__.__name__, x.eId
-            print '\n-------------'
+            print "\n-------------"
 
-        if event.text() == 't':
+        if event.text() == "t":
             tree = []
             for x in self.view.scene.items():
-                if not x.__class__.__name__ == 'Coax':
+                if not x.__class__.__name__ == "Coax":
                     t = [(x.eId, y) for y in x.linksTo]
                     f = [(y, x.eId) for y in x.linksFrom]
                     tree.extend(t + f)
@@ -101,26 +101,26 @@ class iComm(QMainWindow):
                 print x
 
         if event.key() == Qt.Key_S:
-            iCommGlobals.elementClass = 'Hybrids'
-            iCommGlobals.mode = 'draw'
-            self.statusBar.showMessage(QString('Mode: Edit'))
+            iCommGlobals.elementClass = "Hybrids"
+            iCommGlobals.mode = "draw"
+            self.statusBar.showMessage(QString("Mode: Edit"))
             self.setMovabilityFlag(True)
 
         if event.key() == Qt.Key_C:
-            iCommGlobals.elementClass = 'Coax'
-            iCommGlobals.mode = 'link'
-            self.statusBar.showMessage(QString('Mode: Link'))
+            iCommGlobals.elementClass = "Coax"
+            iCommGlobals.mode = "link"
+            self.statusBar.showMessage(QString("Mode: Link"))
             self.setMovabilityFlag(False)
 
         if event.key() == Qt.Key_F1:
-            print 'test F1'
+            print "test F1"
 #------------------------------------------------------------------------------- Testing
 
     def setMovabilityFlag(self, bool):
         # toggle the movability of elements
         # we don't want elements to be moved when in link mode
         items = self.view.scene.items()
-        items = filter(lambda x: x.__module__ == 'elements', items)
+        items = filter(lambda x: x.__module__ == "elements", items)
         map(lambda x: x.setFlag(QGraphicsItem.ItemIsMovable, bool), items)
 
     def centerOnScreen(self):

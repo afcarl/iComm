@@ -33,25 +33,43 @@ class CGraphicsView(QGraphicsView):
         self.stopElement         = None
         self.guiInInspector      = None
 
+        # used for click-move-click with links insted of click-drag-release
+        # Theory:
+        #       "Click"   if 0 build link set to 1
+        #       "Move"    if 1 update link P2
+        #       "Click"   if 1 set to 2
+        #       "Release" if 2 make sure it's a valid location set to 0
+        self.clickPhase = 0                                                    # Needs to be reset when changing modes
+
 #------------------------------------------------------------------------------# mousePressEvent
     def mousePressEvent(self, event):
         super(CGraphicsView, self).mousePressEvent(event)
-        if iCommGlobals.mode == 'draw':
+        if iCommGlobals.mode == "draw":
             self.mousePressEvent_Draw(event)
-        elif iCommGlobals.mode == 'link':
+        elif iCommGlobals.mode == "link":
             self.mousePressEvent_Link(event)
 
     def mousePressEvent_Draw(self, event):
         self.mousePressPosition = event.pos()
 
     def mousePressEvent_Link(self, event):
-        item = self.scene.items(QPointF(event.pos()))
-        if item and item[0].currentPort:
-            self.p1 = QPointF(event.pos())
+
+        try:
+            item = self.scene.items(QPointF(event.pos()))[0]
+        except IndexError:
+            return
+
+        if item and item.currentPort and self.clickPhase == 0:
+            p1 = self.centerLinkToPort(item, QPointF(event.pos()))
             self.x1 = event.pos().x()
             self.y1 = event.pos().y()
-            self.startElement = self.scene.items(self.p1)[0]
-            self.line = self.makeLine()
+            self.startElement = self.scene.items(p1)[0]
+            self.line = self.makeLine(p1)
+            self.clickPhase = 1
+
+        elif self.clickPhase == 1:
+            self.clickPhase = 2
+
         else:
             self.startElement = None
 #------------------------------------------------------------------------------# mousePressEvent
@@ -59,9 +77,9 @@ class CGraphicsView(QGraphicsView):
 #------------------------------------------------------------------------------# mouseReleaseEvent
     def mouseReleaseEvent(self, event):
         super(CGraphicsView, self).mouseReleaseEvent(event)
-        if iCommGlobals.mode == 'draw':
+        if iCommGlobals.mode == "draw":
             self.mouseReleaseEvent_Draw(event)
-        elif iCommGlobals.mode == 'link':
+        elif iCommGlobals.mode == "link":
             self.mouseReleaseEvent_Link(event)
 
     def mouseReleaseEvent_Draw(self, event):
@@ -70,73 +88,73 @@ class CGraphicsView(QGraphicsView):
         self.selectedItemHistory = self.scene.selectedItems()
 
     def mouseReleaseEvent_Link(self, event):
+
+        if self.clickPhase != 2:
+            # this is the first mouse release of the link build step, skip it
+            return
         # attempted to make a link from nothing to somehting/nothing
         # can't be done, must start from an element
+
+        pos = QPointF(event.pos())
+
         try:
-            module = self.scene.items(QPointF(event.pos()))[0].__module__
-            self.stopElement = self.scene.items(QPointF(event.pos()))[0]
-        except IndexError:
+            self.stopElement = self.scene.items(pos)[0]
+            module = self.stopElement.__module__
+        except IndexError ("No Element at that event."):
             return
+
+        # link went to same element, remove it
+        if self.startElement == self.stopElement:
+            self.scene.removeItem(self.line)
+            self.line         = None
+            self.startElement = None
+
         # link started from an element and went to another element.
-        if module == 'elements' and self.startElement != self.stopElement:
-            self.stopElement  = self.scene.items(QPointF(event.pos()))[0]
+        elif module == "elements":
+            self.stopElement  = self.scene.items(pos)[0]
+            p2 = self.centerLinkToPort(self.stopElement, pos)
+            self.line.update(p2)
             self.setElementLinks()
             self.line         = None
             self.startElement = None
 
         # link ended on link element, remove it
-        elif module == 'links':
+        elif module == "links":
             self.scene.removeItem(self.line)
             self.startElement = None
-        # link went to same element, remove it
-        elif self.startElement == self.stopElement:
-            self.scene.removeItem(self.line)
-            self.line         = None
-            self.startElement = None
+
+        self.clickPhase = 0
 
 #------------------------------------------------------------------------------# mouseReleaseEvent
 #                                                                              # -----------------
 #------------------------------------------------------------------------------# mouseMoveEvent
     def mouseMoveEvent(self, event):
         super(CGraphicsView, self).mouseMoveEvent(event)
-        if self.startElement:
+        if self.startElement and self.clickPhase == 1:
             x2 = event.pos().x()
             y2 = event.pos().y()
-            self.line.line.setP2(QPointF(x2, y2))
-            self.line.setLine(self.line.line)
+            self.line.update(QPointF(x2, y2))
             return None
-
 #------------------------------------------------------------------------------# mouseMoveEvent
-
     def setElementLinks(self):
         self.startElement.updateLinksTo(self.stopElement.eId)
-        self.startElement.outerLinks.append(('P1', self.line))
+        self.startElement.outerLinks.append(("P1", self.line))
         self.stopElement.updateLinksFrom(self.startElement.eId)
-        self.stopElement.outerLinks.append(('P2', self.line))
-
+        self.stopElement.outerLinks.append(("P2", self.line))
 #------------------------------------------------------------------------------# Move to links.py
-    def setLineToImagePortPosition(self):
-        # this function will set the line to the J port wanted but for now
-        # will set to center
-
-        def newPoints(elem):
-            centerX = elem.boundingRect().center().x()
-            centerY = elem.boundingRect().center().y()
-            posX    = elem.pos().x()
-            posY    = elem.pos().y()
-            return QPointF(posX + centerX, posY + centerY)
+    #def setLineToImagePortPosition(self):
+    def centerLinkToPort(self, item, pos):
+        return item.mapToScene(item.portRect.center())
 #------------------------------------------------------------------------------# Move to links.py
 
-        points = [newPoints(x) for x in (self.startElement, self.stopElement)]
-        return dict(zip(('Start', 'Stop'), points))
 
-    def makeLine(self):
+    def makeLine(self, p1):
         #linePoints = self.setLineToImagePortPosition()
-        line = links.LinkFactory(self, iCommGlobals.elementClass, self.p1)
+        line = links.LinkFactory(self, iCommGlobals.elementClass, p1)
         self.scene.addItem(line)
         return line
 
-    def mousePositionTolerance(self):
+    def clickDragThreshold(self):
         tolerance = 5 # pixels
         # allow the mouse to move slightly on element placing for shakey hands
         xDelta = self.mousePressPosition.x() - self.mouseReleasePosition.x()
@@ -149,7 +167,7 @@ class CGraphicsView(QGraphicsView):
     def imageControl(self):
         # if the positions are not == then this means we're draggin and we don't
         # want to place an image the start of the dragging point.
-        if not self.mousePositionTolerance():
+        if not self.clickDragThreshold():
             # we have made a selection box, if any elements are in that box
             # set the selection color.
             map(lambda x: x.update(), self.scene.selectedItems())

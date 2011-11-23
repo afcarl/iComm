@@ -49,6 +49,10 @@ class BaseLink(QGraphicsLineItem):
             self.color = Qt.white
             self.update()
 
+    def update(self, pos):
+        self.line.setP2(pos)
+        self.setLine(self.line)
+
 class Coax(BaseLink):
     pass
 

@@ -42,6 +42,7 @@ class BaseElement(QGraphicsSvgItem):
         self.position    = self.setImageCenter(position)
         self.outerLinks  = []   # link object refgerance between elements
         self.currentPort = None # post that the mouse is over
+        self.portRect    = None
 
         # Monitor these flags
         self.setFlags(QGraphicsItem.ItemIsSelectable|
@@ -116,6 +117,7 @@ class BaseElement(QGraphicsSvgItem):
             if port[1].contains(point):
                 self.setElementId(QString(port[0]))
                 self.currentPort = port[0]
+                self.portRect    = port[1]
                 return
         self.setElementId(QString('center'))
         self.currentPort = None
