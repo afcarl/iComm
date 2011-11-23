@@ -7,6 +7,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtSvg import *
 
 from Guis.ParameterGuis import hybridParameterGui
+from rdtext import RdText
 
 class ElementFactory(QGraphicsSvgItem):
 
@@ -15,11 +16,11 @@ class ElementFactory(QGraphicsSvgItem):
         # parent  := parent obj which is always QGraphicsView for iComm
         # element := string of the element class that we want to initilize
         # pos     := element pos in QPointF form
-        element = re.sub('(-|_)', '', element)
+        element = re.sub("(-|_)", "", element)
         self.__class__ = getattr(sys.modules[__name__], element)
 # -----------------------------------------------------------------------------# remove when element images are made
         # For testing only
-        element = 'test_switch'
+        element = "test_switch"
         # For testing only
 # -----------------------------------------------------------------------------# remove when element images are made
         self.__class__.__init__(self, parent, element, pos)
@@ -28,20 +29,23 @@ class ElementFactory(QGraphicsSvgItem):
 class BaseElement(QGraphicsSvgItem):
 
     def __init__(self, parent, element, position):
-        self.image = os.path.join('Images', element.lower(), 'drawing.svg')
+        self.image = os.path.join("Images", element.lower(), "drawing.svg")
         super(BaseElement, self).__init__(self.image)
-        self.setImageColor('green')     # set element selected color
+
+        self.setImageColor("green")     # set element selected color
+        self.setPos(self.setImageCenter(position))
 
         self.parent      = parent
         self.ueId        = None       # unique ID assigned by the program
         self.eId         = self.ueId  # custom ID assigned by the user
         self.linksFrom   = set()      # RDs of elements upstream w/-J#
         self.linksTo     = set()      # RDs of elements downstream w/-J#
-        self.rd          = ''         # RD in parent form
-        self.enteredDict = {'id': self.eId} # gui widget entries
-        self.position    = self.setImageCenter(position)
+        self.rd          = "T"         # RD in parent form
+        self.enteredDict = {"id": self.eId} # gui widget entries
         self.outerLinks  = []   # link object refgerance between elements
-        self.currentPort = None # post that the mouse is over
+        self.currentPort = None # port that the mouse is over
+        self.portRect    = None
+        self.currentPort = None
         self.portRect    = None
 
         # Monitor these flags
@@ -49,21 +53,24 @@ class BaseElement(QGraphicsSvgItem):
                       QGraphicsItem.ItemIsMovable|
                       QGraphicsItem.ItemSendsScenePositionChanges)
         self.setAcceptHoverEvents(True)
-        # map to local coordinates
-        self.setPos(parent.mapToScene(self.position))
+        # map to scene coordinates
+
+        #self.setPos(parent.mapToScene(self.position))
+
+
 
 #------------------------------------------------------------------------------# Overrides
     def hoverEnterEvent(self, event):
         # when mouse enters element change color
-        self.setImageColor('green')
+        self.setImageColor("green")
 
     def hoverMoveEvent(self, event):
         # check when the mouse is hovering over a port
-        self.checkPortHover(event)
+        self.getCurrentPort(event)
 
     def hoverLeaveEvent(self, event):
         # when mouse leaves element change color back to normal
-        self.setImageColor('black')
+        self.setImageColor("black")
 #------------------------------------------------------------------------------# Overrides
 #                                                                              # ---------
 #------------------------------------------------------------------------------# Sets
@@ -80,7 +87,13 @@ class BaseElement(QGraphicsSvgItem):
         # mouse was and not the top left of the image.
         self.x = pos.x() - self.boundingRect().width()/2
         self.y = pos.y() - self.boundingRect().height()/2
-        return QPoint(self.x, self.y)
+        return QPointF(self.x, self.y)
+
+    def setText(self):
+        topRight = self.mapToScene(self.boundingRect().topRight())
+        self.rdText = RdText(self.rd, topRight)
+        self.parent.scene.addItem(self.rdText)
+
 #------------------------------------------------------------------------------# Sets
 #                                                                              # ------
 #------------------------------------------------------------------------------# Custom
@@ -93,33 +106,35 @@ class BaseElement(QGraphicsSvgItem):
     def itemChange(self, change, value):
         # whenever an item has changed we need to update the position
         if change == QGraphicsItem.ItemScenePositionHasChanged:
-            self.updateLinkPositions(value)
-            self.position = value.toPoint() # update image position
+            self.setPos(QPointF(value.toPoint())) # update image position
+            self.updateLinkPositions()
+            self.updateRdTextPositions()
         return QGraphicsItem.itemChange(self, change, value)
 
-    def updateLinkPositions(self, value):
+    def updateLinkPositions(self):
         # should look into setting line as child item to element, if possible,
         # this may simplify line update.
-        valuePoint = value.toPointF()
-        dx = valuePoint.x() - self.position.x()
-        dy = valuePoint.y() - self.position.y()
-        delta = QPointF(dx, dy)
+        # link is the line that needs to be updated
+        # side is the side of the line that need to be updated
         for side, link in self.outerLinks:
-            linePoint = getattr(link.line, side.lower()).__call__()
-            newPoint = linePoint + delta
-            getattr(link.line, 'set' + side).__call__(newPoint)
-            # must setLine otherwise P2 will be set as P1 on element move
-            link.setLine(link.line)
+            link.centerLinkToPort(side)
 
-    def checkPortHover(self, event):
+    def updateRdTextPositions(self):
+        topRight = self.boundingRect().topRight()
+        topRight = self.mapToScene(topRight)
+        self.rdText.setPosition(topRight)
+
+    def getCurrentPort(self, event):
         point = event.pos()
         for port in self.portLocations:
             if port[1].contains(point):
                 self.setElementId(QString(port[0]))
+
                 self.currentPort = port[0]
-                self.portRect    = port[1]
+                self.portRect = port[1]
+
                 return
-        self.setElementId(QString('center'))
+        self.setElementId(QString("center"))
         self.currentPort = None
 
 #------------------------------------------------------------------------------#               Move to another module? v
@@ -160,32 +175,31 @@ class ParameterInputGui(QWidget):
         self.caller.updateEnteredDict(dataDict)
 
     def clickedDelete(self):
-        self.caller.userInputData('Delete')
+        self.caller.userInputData("Delete")
 #------------------------------------------------------------------------------- Clicks
 #                                                                                -------------
 #------------------------------------------------------------------------------- Data handlers
     def setData(self):
         d = self.caller.enteredDict
-        print d
         for child in self.children():
-            if str(child.__class__.__name__) == 'QLineEdit':
+            if str(child.__class__.__name__) == "QLineEdit":
                 child.setText(QString(d[str(child.objectName())]))
 
-            if str(child.__class__.__name__) == 'QCheckBox':
+            if str(child.__class__.__name__) == "QCheckBox":
                 child.setChecked(d[str(child.objectName())])
 
     def clearFields(self):
         dataDict = {}
         for child in self.children():
-            if str(child.__class__.__name__) == 'QLineEdit':
-                child.setText(QString(''))
-                dataDict[str(child.objectName())] = ''
+            if str(child.__class__.__name__) == "QLineEdit":
+                child.setText(QString(""))
+                dataDict[str(child.objectName())] = ""
 
-            if str(child.objectName()) == 'id':
+            if str(child.objectName()) == "id":
                 child.setText(QString(self.caller.eId))
-                dataDict['id'] = self.caller.eId
+                dataDict["id"] = self.caller.eId
 
-            if str(child.objectName()) == 'blockFromSearch':
+            if str(child.objectName()) == "blockFromSearch":
                 child.setChecked(False)
                 dataDict[str(child.objectName())] = False
         self.caller.updateEnteredDict(dataDict)
@@ -194,10 +208,10 @@ class ParameterInputGui(QWidget):
     def getData(self):
         dataDict   = {}
         for child in self.children():
-            if child.__class__.__name__ == 'QLineEdit':
+            if child.__class__.__name__ == "QLineEdit":
                 dataDict[str(child.objectName())] = str(child.text())
 
-            if child.__class__.__name__ == 'QCheckBox':
+            if child.__class__.__name__ == "QCheckBox":
                 dataDict[str(child.objectName())] = child.isChecked()
         self.caller.updateEnteredDict(dataDict)
         return dataDict
@@ -216,18 +230,21 @@ class Hybrids(BaseElement):
         self.portLocations = self.getPortLocations()
 
     def getPortLocations(self):
-        # rect of the ports relative to the image in image coordinates.        # portLocations for for switches
-        # user QPointF because event.pos == QPointF and rect.contains needs F
+        # rect of the ports relative to the image in image coordinates.        # portLocations for switches (testing)
+        # use QPointF because event.pos == QPointF and rect.contains needs F
+        # These rects are defined when the image is made.  Must translate pos
+        # from when drawing image to here.
         #                                   x   y  w  h
-        portLocations = [('bottom', QRectF(10, 20, 9, 9)),
-                         ('right' , QRectF(20, 10, 9, 9)),
-                         ('top'   , QRectF(10,  0, 9, 9)),
-                         ('left'  , QRectF( 0, 10, 9, 9))]
+        portLocations = [("bottom", QRectF(10, 20, 9, 9)),
+                         ("right" , QRectF(20, 10, 9, 9)),
+                         ("top"   , QRectF(10,  0, 9, 9)),
+                         ("left"  , QRectF( 0, 10, 9, 9))]
         return portLocations
-#------------------------------------------------------------------------------# portLocations for for switches
+#------------------------------------------------------------------------------# portLocations for switches (testing)
 
     def updateEnteredDict(self, data):
         self.enteredDict = data
+        self.rdText.update(self.enteredDict["rd"])
 
 class LCamp(BaseElement):
     pass

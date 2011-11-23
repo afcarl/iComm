@@ -14,9 +14,7 @@ class CGraphicsView(QGraphicsView):
         self.scene = QGraphicsScene(parent)
         self.scene.setSceneRect(0.0, 0.0, 250.0, 250.0)
         self.setScene(self.scene)
-
         self.iComm = self.parent.parent()
-
         # These two vars are used to detect mouse dragging.  Initially if we
         # click to drag, we would have placed an image on the screen.  Now we
         # check to see if the two positions are == and if so then place the
@@ -32,7 +30,6 @@ class CGraphicsView(QGraphicsView):
         self.startElement        = None
         self.stopElement         = None
         self.guiInInspector      = None
-
         # used for click-move-click with links insted of click-drag-release
         # Theory:
         #       "Click"   if 0 build link set to 1
@@ -54,25 +51,35 @@ class CGraphicsView(QGraphicsView):
 
     def mousePressEvent_Link(self, event):
 
+
+        pos = QPointF(event.pos())
         try:
-            item = self.scene.items(QPointF(event.pos()))[0]
+            item = self.scene.items(pos)[0]
         except IndexError:
             return
-
         if item and item.currentPort and self.clickPhase == 0:
-            p1 = self.centerLinkToPort(item, QPointF(event.pos()))
-            self.x1 = event.pos().x()
-            self.y1 = event.pos().y()
-            self.startElement = self.scene.items(p1)[0]
-            self.line = self.makeLine(p1)
-            self.clickPhase = 1
+            self.startElement      = item
+            self.line              = self.makeLine(pos)
+            self.line.startElement = self.startElement
+            self.line.startRect    = self.startElement.portRect
+            self.line.centerLinkToPort("P1")
 
+            self.clickPhase = 1
         elif self.clickPhase == 1:
             self.clickPhase = 2
-
         else:
             self.startElement = None
 #------------------------------------------------------------------------------# mousePressEvent
+#                                                                              # ---------------
+#------------------------------------------------------------------------------# mouseMoveEvent
+    def mouseMoveEvent(self, event):
+        super(CGraphicsView, self).mouseMoveEvent(event)
+        if self.startElement and self.clickPhase == 1:
+            x2 = event.pos().x()
+            y2 = event.pos().y()
+            self.line.update(QPointF(x2, y2), "P2")
+            return None
+#------------------------------------------------------------------------------# mouseMoveEvent
 #                                                                              # -----------------
 #------------------------------------------------------------------------------# mouseReleaseEvent
     def mouseReleaseEvent(self, event):
@@ -111,9 +118,11 @@ class CGraphicsView(QGraphicsView):
 
         # link started from an element and went to another element.
         elif module == "elements":
-            self.stopElement  = self.scene.items(pos)[0]
-            p2 = self.centerLinkToPort(self.stopElement, pos)
-            self.line.update(p2)
+            self.stopElement      = self.scene.items(pos)[0]
+            self.line.stopElement = self.stopElement
+            self.line.stopRect    = self.stopElement.portRect
+            self.line.centerLinkToPort("P2")
+
             self.setElementLinks()
             self.line         = None
             self.startElement = None
@@ -124,32 +133,15 @@ class CGraphicsView(QGraphicsView):
             self.startElement = None
 
         self.clickPhase = 0
-
 #------------------------------------------------------------------------------# mouseReleaseEvent
-#                                                                              # -----------------
-#------------------------------------------------------------------------------# mouseMoveEvent
-    def mouseMoveEvent(self, event):
-        super(CGraphicsView, self).mouseMoveEvent(event)
-        if self.startElement and self.clickPhase == 1:
-            x2 = event.pos().x()
-            y2 = event.pos().y()
-            self.line.update(QPointF(x2, y2))
-            return None
-#------------------------------------------------------------------------------# mouseMoveEvent
+
     def setElementLinks(self):
         self.startElement.updateLinksTo(self.stopElement.eId)
         self.startElement.outerLinks.append(("P1", self.line))
         self.stopElement.updateLinksFrom(self.startElement.eId)
         self.stopElement.outerLinks.append(("P2", self.line))
-#------------------------------------------------------------------------------# Move to links.py
-    #def setLineToImagePortPosition(self):
-    def centerLinkToPort(self, item, pos):
-        return item.mapToScene(item.portRect.center())
-#------------------------------------------------------------------------------# Move to links.py
-
 
     def makeLine(self, p1):
-        #linePoints = self.setLineToImagePortPosition()
         line = links.LinkFactory(self, iCommGlobals.elementClass, p1)
         self.scene.addItem(line)
         return line
@@ -182,23 +174,29 @@ class CGraphicsView(QGraphicsView):
         # a better way of doing this section.
         collisionTest = self.checkForCollision(newImage)
 
-        if collisionTest:
+        if collisionTest and collisionTest.__module__ != 'elements':
+            return None
+
+
+        elif collisionTest:
             self.scene.clearSelection()
             collisionTest.setSelected(True)
             self.setParameterInputGui(collisionTest)
             return None
 
-        if (not collisionTest) and (len(self.selectedItemHistory) >= 2):
+        elif (not collisionTest) and (len(self.selectedItemHistory) >= 2):
             self.scene.clearSelection()
             return None
 
-        if (not collisionTest) and (len(self.selectedItemHistory) == 1):
+        elif (not collisionTest) and (len(self.selectedItemHistory) == 1):
             self.scene.clearSelection()
+
 
         newImage.setSelected(True)
         newImage = self.setElementId(newImage)
         self.scene.addItem(newImage)
         self.setElementId(newImage)
+        newImage.setText()
         self.setParameterInputGui(newImage)
 
     def setParameterInputGui(self, image):

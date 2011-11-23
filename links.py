@@ -27,7 +27,10 @@ class BaseLink(QGraphicsLineItem):
         self.rd            = ''
         self.parent        = parent
         self.isHighlighted = True
-        self.currentPort   = None
+        self.startElement  = None
+        self.stopElement   = None
+        self.startRect     = None
+        self.stopRect      = None
 
         self.color = Qt.white
         self.setFlags(QGraphicsItem.ItemSendsScenePositionChanges)
@@ -49,8 +52,18 @@ class BaseLink(QGraphicsLineItem):
             self.color = Qt.white
             self.update()
 
-    def update(self, pos):
-        self.line.setP2(pos)
+    def centerLinkToPort(self, side):
+        if side == "P1":
+            item  = self.startElement
+            point = self.startRect.center()
+        elif side == "P2":
+            item  = self.stopElement
+            point = self.stopRect.center()
+        newPoint  = item.mapToScene(point)
+        self.update(newPoint, side)
+
+    def update(self, pos, side):
+        getattr(self.line, "set" + side).__call__(pos)
         self.setLine(self.line)
 
 class Coax(BaseLink):
