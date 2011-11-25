@@ -1,10 +1,11 @@
 import os
+import time
 import links
 import elements
 
 from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtSvg import *
+from PyQt4.QtGui  import *
+from PyQt4.QtSvg  import *
 
 class CGraphicsView(QGraphicsView):
     # graphicsView
@@ -37,6 +38,10 @@ class CGraphicsView(QGraphicsView):
         #       "Click"   if 1 set to 2
         #       "Release" if 2 make sure it's a valid location set to 0
         self.clickPhase = 0                                                    # Needs to be reset when changing modes
+        
+        # data for saving files                                                 
+        self.lookupObj2Id = {}
+        self.idList       = []
 
 #------------------------------------------------------------------------------# mousePressEvent
     def mousePressEvent(self, event):
@@ -51,20 +56,20 @@ class CGraphicsView(QGraphicsView):
 
     def mousePressEvent_Link(self, event):
 
-
         pos = QPointF(event.pos())
         try:
-            item = self.scene.items(pos)[0]
+            item = self.scene.items(pos)[0]            
         except IndexError:
             return
         if item and item.currentPort and self.clickPhase == 0:
-            self.startElement      = item
+            
             self.line              = self.makeLine(pos)
-            self.line.startElement = self.startElement
-            self.line.startRect    = self.startElement.portRect
+            self.line.startElement = item
+            self.line.startRect    = item.portRect
             self.line.centerLinkToPort("P1")
-
-            self.clickPhase = 1
+            self.clickPhase        = 1
+            self.startElement      = item
+            
         elif self.clickPhase == 1:
             self.clickPhase = 2
         else:
@@ -122,8 +127,12 @@ class CGraphicsView(QGraphicsView):
             self.line.stopElement = self.stopElement
             self.line.stopRect    = self.stopElement.portRect
             self.line.centerLinkToPort("P2")
-
+            
             self.setElementLinks()
+            self.assignId(self.line)
+            self.startElement.setPortConnection(self.stopElement)
+            self.stopElement.setPortConnection(self.startElement)
+            
             self.line         = None
             self.startElement = None
 
@@ -164,6 +173,7 @@ class CGraphicsView(QGraphicsView):
             # set the selection color.
             map(lambda x: x.update(), self.scene.selectedItems())
             return None
+
         if iCommGlobals.elementClass:
             newImage = elements.ElementFactory(self,
                                                iCommGlobals.elementClass,
@@ -176,8 +186,7 @@ class CGraphicsView(QGraphicsView):
 
         if collisionTest and collisionTest.__module__ != 'elements':
             return None
-
-
+            
         elif collisionTest:
             self.scene.clearSelection()
             collisionTest.setSelected(True)
@@ -191,13 +200,18 @@ class CGraphicsView(QGraphicsView):
         elif (not collisionTest) and (len(self.selectedItemHistory) == 1):
             self.scene.clearSelection()
 
-
         newImage.setSelected(True)
-        newImage = self.setElementId(newImage)
+        newImage = self.assignId(newImage)
         self.scene.addItem(newImage)
-        self.setElementId(newImage)
-        newImage.setText()
         self.setParameterInputGui(newImage)
+        
+        self.updateLookup(newImage)
+
+    def updateLookup(self, obj):
+        self.lookupObj2Id[obj] = obj.eId
+        self.idList.append(obj.eId)
+        print obj.eId
+
 
     def setParameterInputGui(self, image):
 
@@ -211,9 +225,8 @@ class CGraphicsView(QGraphicsView):
         self.guiInInspector = gui
         self.iComm.ui.Inspector.setFixedWidth(gui.size().width())
 
-    def setElementId(self, element):
-        # set the eId of the element
-        element.eId = str(len(self.scene.items()))
+    def assignId(self, element):
+        element.eId = str(time.time())
         return element
 
     def checkForCollision(self, newImage):

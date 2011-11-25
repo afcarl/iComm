@@ -18,8 +18,8 @@ class BaseLink(QGraphicsLineItem):
 
     def __init__(self, parent, element, start):
 
-        self.start         = QPointF(start)
-        self.line = QLineF(self.start, self.start)
+        self.start = QPointF(start)
+        self.line  = QLineF(self.start, self.start)
 
         super(BaseLink, self).__init__(self.line)
 

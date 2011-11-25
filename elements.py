@@ -25,7 +25,6 @@ class ElementFactory(QGraphicsSvgItem):
 # -----------------------------------------------------------------------------# remove when element images are made
         self.__class__.__init__(self, parent, element, pos)
 
-
 class BaseElement(QGraphicsSvgItem):
 
     def __init__(self, parent, element, position):
@@ -35,45 +34,38 @@ class BaseElement(QGraphicsSvgItem):
         self.setImageColor("green")     # set element selected color
         self.setPos(self.setImageCenter(position))
 
-        self.parent      = parent
+        self.parent      = parent     # referance to view
         self.ueId        = None       # unique ID assigned by the program
         self.eId         = self.ueId  # custom ID assigned by the user
         self.linksFrom   = set()      # RDs of elements upstream w/-J#
         self.linksTo     = set()      # RDs of elements downstream w/-J#
-        self.rd          = "T"         # RD in parent form
+        self.rd          = ""         # RD in parent form
         self.enteredDict = {"id": self.eId} # gui widget entries
         self.outerLinks  = []   # link object refgerance between elements
         self.currentPort = None # port that the mouse is over
         self.portRect    = None
-        self.currentPort = None
-        self.portRect    = None
+        self.freshGui    = True
+        self.setText()
 
-        # Monitor these flags
         self.setFlags(QGraphicsItem.ItemIsSelectable|
                       QGraphicsItem.ItemIsMovable|
                       QGraphicsItem.ItemSendsScenePositionChanges)
         self.setAcceptHoverEvents(True)
-        # map to scene coordinates
-
-        #self.setPos(parent.mapToScene(self.position))
-
-
-
 #------------------------------------------------------------------------------# Overrides
     def hoverEnterEvent(self, event):
-        # when mouse enters element change color
         self.setImageColor("green")
 
     def hoverMoveEvent(self, event):
-        # check when the mouse is hovering over a port
         self.getCurrentPort(event)
 
     def hoverLeaveEvent(self, event):
-        # when mouse leaves element change color back to normal
         self.setImageColor("black")
 #------------------------------------------------------------------------------# Overrides
 #                                                                              # ---------
 #------------------------------------------------------------------------------# Sets
+    def setPortConnection(self, obj):
+        self.connections[self.currentPort] = (obj, obj.currentPort)
+
     def setImageColor(self, color):
         self.setElementId(QString(color))
 
@@ -83,17 +75,14 @@ class BaseElement(QGraphicsSvgItem):
         return self.gui
 
     def setImageCenter(self, pos):
-        # when we place an image, I want the center to be where the point of the
-        # mouse was and not the top left of the image.
-        self.x = pos.x() - self.boundingRect().width()/2
-        self.y = pos.y() - self.boundingRect().height()/2
-        return QPointF(self.x, self.y)
+        x = pos.x() - self.boundingRect().width()/2
+        y = pos.y() - self.boundingRect().height()/2
+        return QPointF(x, y)
 
     def setText(self):
         topRight = self.mapToScene(self.boundingRect().topRight())
         self.rdText = RdText(self.rd, topRight)
         self.parent.scene.addItem(self.rdText)
-
 #------------------------------------------------------------------------------# Sets
 #                                                                              # ------
 #------------------------------------------------------------------------------# Custom
@@ -126,13 +115,11 @@ class BaseElement(QGraphicsSvgItem):
 
     def getCurrentPort(self, event):
         point = event.pos()
-        for port in self.portLocations:
-            if port[1].contains(point):
-                self.setElementId(QString(port[0]))
-
-                self.currentPort = port[0]
-                self.portRect = port[1]
-
+        for port in self.portRects:
+            if self.portRects[port].contains(point):
+                self.setElementId(QString(port))
+                self.currentPort = port
+                self.portRect    = self.portRects[port]
                 return
         self.setElementId(QString("center"))
         self.currentPort = None
@@ -217,35 +204,41 @@ class ParameterInputGui(QWidget):
         return dataDict
 #------------------------------------------------------------------------------#               Move to another module? ^
 
-
-class Mux(BaseElement):
-    pass
-
 class Hybrids(BaseElement):
 
     def __init__(self, *args):
         super(Hybrids, self).__init__(args[0], args[1], args[2])
-        self.guiModule     = hybridParameterGui
-        self.freshGui      = True
-        self.portLocations = self.getPortLocations()
+        self.guiModule   = hybridParameterGui
+        self.portRects   = self.getPortRects()
+        
+        self.connections = {"J1" : None,
+                            "J2" : None,
+                            "J3" : None,
+                            "J4" : None}
 
-    def getPortLocations(self):
+    def getPortRects(self):
         # rect of the ports relative to the image in image coordinates.        # portLocations for switches (testing)
         # use QPointF because event.pos == QPointF and rect.contains needs F
         # These rects are defined when the image is made.  Must translate pos
         # from when drawing image to here.
-        #                                   x   y  w  h
-        portLocations = [("bottom", QRectF(10, 20, 9, 9)),
-                         ("right" , QRectF(20, 10, 9, 9)),
-                         ("top"   , QRectF(10,  0, 9, 9)),
-                         ("left"  , QRectF( 0, 10, 9, 9))]
-        return portLocations
+        # this is the initial state run time the can change to represent the
+        # block diagram.
+        #                           x   y  w  h
+        portRects = {"J1" : QRectF(10, 20, 9, 9),
+                     "J2" : QRectF(20, 10, 9, 9),
+                     "J3" : QRectF(10,  0, 9, 9),
+                     "J4" : QRectF( 0, 10, 9, 9)}
+        return portRects
 #------------------------------------------------------------------------------# portLocations for switches (testing)
 
     def updateEnteredDict(self, data):
         self.enteredDict = data
+        for attr in data:
+            setattr(self, attr, data[attr])        
         self.rdText.update(self.enteredDict["rd"])
 
+
+'''
 class LCamp(BaseElement):
     pass
 
@@ -272,3 +265,7 @@ class Isolators(BaseElement):
 
 class Circulators(BaseElement):
     pass
+
+class Mux(BaseElement):
+    pass
+'''

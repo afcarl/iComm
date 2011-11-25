@@ -49,7 +49,7 @@
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="left"
+     id="J4"
      transform="translate(0,-1023.3622)">
     <path
        sodipodi:type="arc"
@@ -135,7 +135,7 @@
        style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.21096833;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
   </g>
   <g
-     id="bottom"
+     id="J1"
      inkscape:groupmode="layer"
      inkscape:label="Layer 1"
      transform="translate(0,-1023.3622)">
@@ -181,7 +181,7 @@
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="right"
+     id="J2"
      transform="translate(0,-1023.3622)">
     <path
        sodipodi:type="arc"
@@ -223,7 +223,7 @@
        y="1043.515" />
   </g>
   <g
-     id="top"
+     id="J3"
      inkscape:groupmode="layer"
      inkscape:label="Layer 1"
      transform="translate(0,-1023.3622)">

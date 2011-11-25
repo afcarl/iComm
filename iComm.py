@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+import Save
+
+
 import sys
 import os
 
@@ -25,6 +28,8 @@ class iComm(QMainWindow):
         # make connection with menuElements and function handler
         self.ui.menuElements.triggered.connect(self.onElementsTriggered)
         self.ui.menuView.triggered.connect(self.onViewTriggered)
+        self.ui.menuFile.triggered.connect(self.onFiletriggered)
+        
         self.centerOnScreen()
 
         self.view       = self.ui.GraphicsView
@@ -40,6 +45,13 @@ class iComm(QMainWindow):
         self.pyInterp.updateInterpreterLocals(self.view, "view")
         self.pyInterp.updateInterpreterLocals(self.objInspect, "inspector")
         self.pyInterp.updateInterpreterLocals(self.pyDock, "pythonDock")
+
+
+
+    def onFiletriggered(self, event):
+        if str(event.text()) == "Save":
+            print 'save'
+            Save.Pkl().dump(self.view, 'AAA.pkl')
 
     def onViewTriggered(self, event):
 
