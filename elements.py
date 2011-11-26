@@ -37,11 +37,8 @@ class BaseElement(QGraphicsSvgItem):
         self.parent      = parent     # referance to view
         self.ueId        = None       # unique ID assigned by the program
         self.eId         = self.ueId  # custom ID assigned by the user
-        self.linksFrom   = set()      # RDs of elements upstream w/-J#
-        self.linksTo     = set()      # RDs of elements downstream w/-J#
         self.rd          = ""         # RD in parent form
         self.enteredDict = {"id": self.eId} # gui widget entries
-        self.outerLinks  = []   # link object refgerance between elements
         self.currentPort = None # port that the mouse is over
         self.portRect    = None
         self.freshGui    = True
@@ -63,8 +60,9 @@ class BaseElement(QGraphicsSvgItem):
 #------------------------------------------------------------------------------# Overrides
 #                                                                              # ---------
 #------------------------------------------------------------------------------# Sets
-    def setPortConnection(self, obj):
-        self.connections[self.currentPort] = (obj, obj.currentPort)
+    def setPortConnection(self, element, line):
+        connections = (element, element.currentPort, line, side)
+        self.connections[self.currentPort] = connections
 
     def setImageColor(self, color):
         self.setElementId(QString(color))
@@ -86,11 +84,6 @@ class BaseElement(QGraphicsSvgItem):
 #------------------------------------------------------------------------------# Sets
 #                                                                              # ------
 #------------------------------------------------------------------------------# Custom
-    def updateLinksTo(self, toEId):
-        self.linksTo = set(tuple(self.linksTo) + (toEId,))
-
-    def updateLinksFrom(self, fromEId):
-        self.linksFrom = set(tuple(self.linksFrom) + (fromEId,))
 
     def itemChange(self, change, value):
         # whenever an item has changed we need to update the position
@@ -211,10 +204,14 @@ class Hybrids(BaseElement):
         self.guiModule   = hybridParameterGui
         self.portRects   = self.getPortRects()
         
-        self.connections = {"J1" : None,
-                            "J2" : None,
-                            "J3" : None,
-                            "J4" : None}
+        # key   == current element's J port
+        # value == element connected to 
+        #          port of element connnected to
+        #          coax connecting them
+        self.connections = {"J1" : (None, None, None),
+                            "J2" : (None, None, None),
+                            "J3" : (None, None, None),
+                            "J4" : (None, None, None)}
 
     def getPortRects(self):
         # rect of the ports relative to the image in image coordinates.        # portLocations for switches (testing)

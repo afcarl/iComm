@@ -10,38 +10,28 @@ from PyQt4.QtSvg  import *
 class CGraphicsView(QGraphicsView):
     # graphicsView
     def __init__(self, parent):
+
         super(CGraphicsView, self).__init__(parent)
-        self.parent = parent
-        self.scene = QGraphicsScene(parent)
-        self.scene.setSceneRect(0.0, 0.0, 250.0, 250.0)
-        self.setScene(self.scene)
-        self.iComm = self.parent.parent()
-        # These two vars are used to detect mouse dragging.  Initially if we
-        # click to drag, we would have placed an image on the screen.  Now we
-        # check to see if the two positions are == and if so then place the
-        # image otherwise don't an allow dragging.
+        self.parent               = parent
+        self.iComm                = self.parent.parent()
         self.mousePressPosition   = None
         self.mouseReleasePosition = None
-        # keeps a list of selectedItems which is populated with
-        # self.scene.selectedItems().  We save this number for this case: if we
-        # have a group of selected items and click in an empty spot we want to
-        # deselect the group and not place an image down.  This makes the
-        # program more transparent to other programs deselection process.
-        self.selectedItemHistory = []
-        self.startElement        = None
-        self.stopElement         = None
-        self.guiInInspector      = None
+        self.selectedItemHistory  = []
+        self.startElement         = None
+        self.stopElement          = None
+        self.guiInInspector       = None
+        self.scene                = QGraphicsScene(parent)
+        self.lookupObj2Id         = {}
+        self.idList               = []
+        self.clickPhase           = 0                                                    # Needs to be reset when changing modes
         # used for click-move-click with links insted of click-drag-release
         # Theory:
         #       "Click"   if 0 build link set to 1
         #       "Move"    if 1 update link P2
         #       "Click"   if 1 set to 2
         #       "Release" if 2 make sure it's a valid location set to 0
-        self.clickPhase = 0                                                    # Needs to be reset when changing modes
-        
-        # data for saving files                                                 
-        self.lookupObj2Id = {}
-        self.idList       = []
+        self.scene.setSceneRect(0.0, 0.0, 250.0, 250.0)
+        self.setScene(self.scene)        
 
 #------------------------------------------------------------------------------# mousePressEvent
     def mousePressEvent(self, event):
@@ -62,14 +52,12 @@ class CGraphicsView(QGraphicsView):
         except IndexError:
             return
         if item and item.currentPort and self.clickPhase == 0:
-            
             self.line              = self.makeLine(pos)
             self.line.startElement = item
             self.line.startRect    = item.portRect
             self.line.centerLinkToPort("P1")
             self.clickPhase        = 1
             self.startElement      = item
-            
         elif self.clickPhase == 1:
             self.clickPhase = 2
         else:
@@ -100,56 +88,39 @@ class CGraphicsView(QGraphicsView):
         self.selectedItemHistory = self.scene.selectedItems()
 
     def mouseReleaseEvent_Link(self, event):
-
         if self.clickPhase != 2:
             # this is the first mouse release of the link build step, skip it
             return
         # attempted to make a link from nothing to somehting/nothing
         # can't be done, must start from an element
-
         pos = QPointF(event.pos())
-
         try:
-            self.stopElement = self.scene.items(pos)[0]
-            module = self.stopElement.__module__
+            stopElement = self.scene.items(pos)[0]
+            module      = stopElement.__module__
         except IndexError ("No Element at that event."):
             return
-
         # link went to same element, remove it
-        if self.startElement == self.stopElement:
+        if self.startElement == stopElement:
             self.scene.removeItem(self.line)
             self.line         = None
             self.startElement = None
-
         # link started from an element and went to another element.
         elif module == "elements":
-            self.stopElement      = self.scene.items(pos)[0]
-            self.line.stopElement = self.stopElement
-            self.line.stopRect    = self.stopElement.portRect
+            stopElement           = self.scene.items(pos)[0]
+            self.line.stopElement = stopElement
+            self.line.stopRect    = stopElement.portRect
             self.line.centerLinkToPort("P2")
-            
-            self.setElementLinks()
             self.assignId(self.line)
-            self.startElement.setPortConnection(self.stopElement)
-            self.stopElement.setPortConnection(self.startElement)
-            
+            self.startElement.setPortConnection(stopElement, self.line, "P1")
+            stopElement.setPortConnection(self.startElement, self.line, "P2")
             self.line         = None
             self.startElement = None
-
         # link ended on link element, remove it
         elif module == "links":
             self.scene.removeItem(self.line)
             self.startElement = None
-
         self.clickPhase = 0
 #------------------------------------------------------------------------------# mouseReleaseEvent
-
-    def setElementLinks(self):
-        self.startElement.updateLinksTo(self.stopElement.eId)
-        self.startElement.outerLinks.append(("P1", self.line))
-        self.stopElement.updateLinksFrom(self.startElement.eId)
-        self.stopElement.outerLinks.append(("P2", self.line))
-
     def makeLine(self, p1):
         line = links.LinkFactory(self, iCommGlobals.elementClass, p1)
         self.scene.addItem(line)
@@ -212,9 +183,7 @@ class CGraphicsView(QGraphicsView):
         self.idList.append(obj.eId)
         print obj.eId
 
-
     def setParameterInputGui(self, image):
-
         if self.guiInInspector:
             # clear the gui that's in Inspector
             self.guiInInspector.getData()
