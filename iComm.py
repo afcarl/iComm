@@ -46,8 +46,6 @@ class iComm(QMainWindow):
         self.pyInterp.updateInterpreterLocals(self.objInspect, "inspector")
         self.pyInterp.updateInterpreterLocals(self.pyDock, "pythonDock")
 
-
-
     def onFiletriggered(self, event):
         if str(event.text()) == "Save":
             print 'save'

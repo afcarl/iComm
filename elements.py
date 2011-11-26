@@ -34,13 +34,13 @@ class BaseElement(QGraphicsSvgItem):
         self.setImageColor("green")     # set element selected color
         self.setPos(self.setImageCenter(position))
 
+
         self.parent      = parent     # referance to view
         self.ueId        = None       # unique ID assigned by the program
         self.eId         = self.ueId  # custom ID assigned by the user
         self.rd          = ""         # RD in parent form
         self.enteredDict = {"id": self.eId} # gui widget entries
-        self.currentPort = None # port that the mouse is over
-        self.portRect    = None
+
         self.freshGui    = True
         self.setText()
 
@@ -53,14 +53,15 @@ class BaseElement(QGraphicsSvgItem):
         self.setImageColor("green")
 
     def hoverMoveEvent(self, event):
-        self.getCurrentPort(event)
-
+        point = QPointF(event.pos())
+        self.getCurrentPort(point)
+        
     def hoverLeaveEvent(self, event):
         self.setImageColor("black")
 #------------------------------------------------------------------------------# Overrides
 #                                                                              # ---------
 #------------------------------------------------------------------------------# Sets
-    def setPortConnection(self, element, line):
+    def setPortConnection(self, element, line, side):
         connections = (element, element.currentPort, line, side)
         self.connections[self.currentPort] = connections
 
@@ -78,7 +79,7 @@ class BaseElement(QGraphicsSvgItem):
         return QPointF(x, y)
 
     def setText(self):
-        topRight = self.mapToScene(self.boundingRect().topRight())
+        topRight    = self.mapToScene(self.boundingRect().topRight())
         self.rdText = RdText(self.rd, topRight)
         self.parent.scene.addItem(self.rdText)
 #------------------------------------------------------------------------------# Sets
@@ -96,9 +97,14 @@ class BaseElement(QGraphicsSvgItem):
     def updateLinkPositions(self):
         # should look into setting line as child item to element, if possible,
         # this may simplify line update.
+        # go through every port of the element and update everything
         # link is the line that needs to be updated
         # side is the side of the line that need to be updated
-        for side, link in self.outerLinks:
+        for port in self.connections:
+            link = self.connections[port][2]
+            if not link:
+                continue
+            side = self.connections[port][3]
             link.centerLinkToPort(side)
 
     def updateRdTextPositions(self):
@@ -106,16 +112,14 @@ class BaseElement(QGraphicsSvgItem):
         topRight = self.mapToScene(topRight)
         self.rdText.setPosition(topRight)
 
-    def getCurrentPort(self, event):
-        point = event.pos()
+    def getCurrentPort(self, point):
         for port in self.portRects:
             if self.portRects[port].contains(point):
                 self.setElementId(QString(port))
-                self.currentPort = port
-                self.portRect    = self.portRects[port]
-                return
+                return (port, self.portRects[port])
         self.setElementId(QString("center"))
         self.currentPort = None
+        return None
 
 #------------------------------------------------------------------------------#               Move to another module? v
 class ParameterInputGui(QWidget):
@@ -208,10 +212,10 @@ class Hybrids(BaseElement):
         # value == element connected to 
         #          port of element connnected to
         #          coax connecting them
-        self.connections = {"J1" : (None, None, None),
-                            "J2" : (None, None, None),
-                            "J3" : (None, None, None),
-                            "J4" : (None, None, None)}
+        self.connections = {"J1" : (None, None, None, None),
+                            "J2" : (None, None, None, None),
+                            "J3" : (None, None, None, None),
+                            "J4" : (None, None, None, None)}
 
     def getPortRects(self):
         # rect of the ports relative to the image in image coordinates.        # portLocations for switches (testing)

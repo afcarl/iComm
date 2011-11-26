@@ -18,5 +18,4 @@ class Pkl(object):
                 
     def saveElement(self, obj, lookup):
         print obj
-        
-        
+        print obj.__dict__

@@ -48,16 +48,26 @@ class CGraphicsView(QGraphicsView):
 
         pos = QPointF(event.pos())
         try:
-            item = self.scene.items(pos)[0]            
+            item = self.scene.items(pos)[0]
+            port = item.getCurrentPort(item.mapFromParent(pos))
         except IndexError:
             return
-        if item and item.currentPort and self.clickPhase == 0:
+        except AttributeError:
+            self.startElement = None
+            self.clickPhase   = 0
+            self.scene.removeItem(self.line)
+            return
+
+        if not port:
+            return
+        elif item and self.clickPhase == 0:
             self.line              = self.makeLine(pos)
             self.line.startElement = item
-            self.line.startRect    = item.portRect
+            self.line.startRect    = port[1]
             self.line.centerLinkToPort("P1")
             self.clickPhase        = 1
             self.startElement      = item
+            
         elif self.clickPhase == 1:
             self.clickPhase = 2
         else:
@@ -95,26 +105,27 @@ class CGraphicsView(QGraphicsView):
         # can't be done, must start from an element
         pos = QPointF(event.pos())
         try:
-            stopElement = self.scene.items(pos)[0]
-            module      = stopElement.__module__
+            item   = self.scene.items(pos)[0]
+            port   = item.getCurrentPort(item.mapFromParent(pos))
+            module = item.__module__
         except IndexError ("No Element at that event."):
             return
         # link went to same element, remove it
-        if self.startElement == stopElement:
+        if self.startElement == item:
             self.scene.removeItem(self.line)
             self.line         = None
             self.startElement = None
         # link started from an element and went to another element.
         elif module == "elements":
-            stopElement           = self.scene.items(pos)[0]
-            self.line.stopElement = stopElement
-            self.line.stopRect    = stopElement.portRect
+            self.line.stopElement = item
+            self.line.stopRect    = port[1]
             self.line.centerLinkToPort("P2")
             self.assignId(self.line)
-            self.startElement.setPortConnection(stopElement, self.line, "P1")
-            stopElement.setPortConnection(self.startElement, self.line, "P2")
+            self.startElement.setPortConnection(item, self.line, "P1")
+            item.setPortConnection(self.startElement, self.line, "P2")
             self.line         = None
             self.startElement = None
+            
         # link ended on link element, remove it
         elif module == "links":
             self.scene.removeItem(self.line)
@@ -181,7 +192,6 @@ class CGraphicsView(QGraphicsView):
     def updateLookup(self, obj):
         self.lookupObj2Id[obj] = obj.eId
         self.idList.append(obj.eId)
-        print obj.eId
 
     def setParameterInputGui(self, image):
         if self.guiInInspector:
