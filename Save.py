@@ -18,11 +18,10 @@ class Pkl(object):
                 
     def obj2Id(self, obj, lookup):
         for port in obj.connections:
-        
             elem   = obj.connections[port][0]
             link   = obj.connections[port][2]
-
-            print elem
-            print link
-            print '------------------'
-        print obj.connections
+            elemId = lookup[elem]
+            linkId = lookup[link]
+            obj.connections[port][0] = elemId
+            obj.connections[port][2] = linkId
+            

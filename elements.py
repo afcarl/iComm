@@ -37,7 +37,7 @@ class BaseElement(QGraphicsSvgItem):
         self.parent      = parent     # referance to view
         self.ueId        = None       # unique ID assigned by the program
         self.eId         = self.ueId  # custom ID assigned by the user
-        self.rd          = "test"         # RD in parent form
+        self.rd          = ""         # RD in parent form
         self.freshGui    = True
         self.enteredDict = {"id": self.eId,
                             "rd": self.rd}
@@ -60,8 +60,8 @@ class BaseElement(QGraphicsSvgItem):
 #------------------------------------------------------------------------------# Overrides
 #                                                                              # ---------
 #------------------------------------------------------------------------------# Sets
-    def setPortConnection(self, port, element, line, side):
-        connections = [element, element.currentPort, line, side]
+    def setPortConnection(self, (port, element, port2, line, side)):
+        connections = [element, port2, line, side]
         self.connections[port] = connections
 
     def setImageColor(self, color):

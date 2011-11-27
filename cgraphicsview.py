@@ -122,10 +122,13 @@ class CGraphicsView(QGraphicsView):
             self.line.centerLinkToPort("P2")
             self.assignId(self.line)
             self.updateLookup(self.line)
+
+            args = (port[0], self.startElement, self.startPort, self.line, "P2")
+            item.setPortConnection(args)
             
-            self.startElement.setPortConnection(port[0], item, self.line, "P1")
-            port = self.startPort
-            item.setPortConnection(port[0], self.startElement, self.line, "P2")
+            args = (self.startPort, item, port[0], self.line, "P1")
+            self.startElement.setPortConnection(args)
+
             self.line         = None
             self.startElement = None
             
