@@ -53,7 +53,6 @@ class iComm(QMainWindow):
 
     def onViewTriggered(self, event):
 
-        # toggle between viewing object inspector and python interpreter
         if str(event.text()) == "Python Console":
             if self.pyDock.isVisible():
                 self.pyDock.hide()

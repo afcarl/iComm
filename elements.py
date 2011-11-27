@@ -34,16 +34,15 @@ class BaseElement(QGraphicsSvgItem):
         self.setImageColor("green")     # set element selected color
         self.setPos(self.setImageCenter(position))
 
-
         self.parent      = parent     # referance to view
         self.ueId        = None       # unique ID assigned by the program
         self.eId         = self.ueId  # custom ID assigned by the user
-        self.rd          = ""         # RD in parent form
-        self.enteredDict = {"id": self.eId} # gui widget entries
-
+        self.rd          = "test"         # RD in parent form
         self.freshGui    = True
-        self.setText()
+        self.enteredDict = {"id": self.eId,
+                            "rd": self.rd}
 
+        self.setText()
         self.setFlags(QGraphicsItem.ItemIsSelectable|
                       QGraphicsItem.ItemIsMovable|
                       QGraphicsItem.ItemSendsScenePositionChanges)
@@ -61,9 +60,9 @@ class BaseElement(QGraphicsSvgItem):
 #------------------------------------------------------------------------------# Overrides
 #                                                                              # ---------
 #------------------------------------------------------------------------------# Sets
-    def setPortConnection(self, element, line, side):
-        connections = (element, element.currentPort, line, side)
-        self.connections[self.currentPort] = connections
+    def setPortConnection(self, port, element, line, side):
+        connections = [element, element.currentPort, line, side]
+        self.connections[port] = connections
 
     def setImageColor(self, color):
         self.setElementId(QString(color))
@@ -85,7 +84,6 @@ class BaseElement(QGraphicsSvgItem):
 #------------------------------------------------------------------------------# Sets
 #                                                                              # ------
 #------------------------------------------------------------------------------# Custom
-
     def itemChange(self, change, value):
         # whenever an item has changed we need to update the position
         if change == QGraphicsItem.ItemScenePositionHasChanged:
@@ -120,7 +118,6 @@ class BaseElement(QGraphicsSvgItem):
         self.setElementId(QString("center"))
         self.currentPort = None
         return None
-
 #------------------------------------------------------------------------------#               Move to another module? v
 class ParameterInputGui(QWidget):
 
@@ -212,10 +209,11 @@ class Hybrids(BaseElement):
         # value == element connected to 
         #          port of element connnected to
         #          coax connecting them
-        self.connections = {"J1" : (None, None, None, None),
-                            "J2" : (None, None, None, None),
-                            "J3" : (None, None, None, None),
-                            "J4" : (None, None, None, None)}
+        #          side of the coax being used on the key
+        self.connections = {"J1" : [None, None, None, None],
+                            "J2" : [None, None, None, None],
+                            "J3" : [None, None, None, None],
+                            "J4" : [None, None, None, None]}
 
     def getPortRects(self):
         # rect of the ports relative to the image in image coordinates.        # portLocations for switches (testing)

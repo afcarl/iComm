@@ -13,9 +13,16 @@ class Pkl(object):
         
         for element in view.scene.items():
             if element.__module__ == 'elements':
-                self.saveElement(element, lookup)
+                self.obj2Id(element, lookup)
                 
                 
-    def saveElement(self, obj, lookup):
-        print obj
-        print obj.__dict__
+    def obj2Id(self, obj, lookup):
+        for port in obj.connections:
+        
+            elem   = obj.connections[port][0]
+            link   = obj.connections[port][2]
+
+            print elem
+            print link
+            print '------------------'
+        print obj.connections

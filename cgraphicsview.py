@@ -18,10 +18,9 @@ class CGraphicsView(QGraphicsView):
         self.mouseReleasePosition = None
         self.selectedItemHistory  = []
         self.startElement         = None
-        self.stopElement          = None
         self.guiInInspector       = None
         self.scene                = QGraphicsScene(parent)
-        self.lookupObj2Id         = {}
+        self.lookupObj2Id         = {None: None}
         self.idList               = []
         self.clickPhase           = 0                                                    # Needs to be reset when changing modes
         # used for click-move-click with links insted of click-drag-release
@@ -63,6 +62,7 @@ class CGraphicsView(QGraphicsView):
         elif item and self.clickPhase == 0:
             self.line              = self.makeLine(pos)
             self.line.startElement = item
+            self.startPort         = port[0]
             self.line.startRect    = port[1]
             self.line.centerLinkToPort("P1")
             self.clickPhase        = 1
@@ -121,8 +121,11 @@ class CGraphicsView(QGraphicsView):
             self.line.stopRect    = port[1]
             self.line.centerLinkToPort("P2")
             self.assignId(self.line)
-            self.startElement.setPortConnection(item, self.line, "P1")
-            item.setPortConnection(self.startElement, self.line, "P2")
+            self.updateLookup(self.line)
+            
+            self.startElement.setPortConnection(port[0], item, self.line, "P1")
+            port = self.startPort
+            item.setPortConnection(port[0], self.startElement, self.line, "P2")
             self.line         = None
             self.startElement = None
             
@@ -186,7 +189,6 @@ class CGraphicsView(QGraphicsView):
         newImage = self.assignId(newImage)
         self.scene.addItem(newImage)
         self.setParameterInputGui(newImage)
-        
         self.updateLookup(newImage)
 
     def updateLookup(self, obj):
@@ -213,7 +215,5 @@ class CGraphicsView(QGraphicsView):
         # should be something with Qt that allows this in C and not python
         for item in self.scene.items():
             if item.collidesWithItem(newImage):
-                # if we had a collision, return the image, True
                 return item
-        # return False for no image collision
         return False
