@@ -13,15 +13,17 @@ class Pkl(object):
         
         for element in view.scene.items():
             if element.__module__ == 'elements':
-                self.obj2Id(element, lookup)
+                connections = self.obj2Id(element, lookup)
+                position    = element.pos()
                 
                 
     def obj2Id(self, obj, lookup):
+        copy = {}
         for port in obj.connections:
-            elem   = obj.connections[port][0]
-            link   = obj.connections[port][2]
-            elemId = lookup[elem]
-            linkId = lookup[link]
-            obj.connections[port][0] = elemId
-            obj.connections[port][2] = linkId
-            
+            connections    = obj.connections[port][:]
+            elemId         = lookup[connections[0]]
+            linkId         = lookup[connections[2]]
+            connections[0] = elemId
+            connections[2] = linkId
+            copy[port]     = connections
+        return copy
