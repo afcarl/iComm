@@ -16,11 +16,11 @@ class ElementFactory(QGraphicsSvgItem):
         # parent  := parent obj which is always QGraphicsView for iComm
         # element := string of the element class that we want to initilize
         # pos     := element pos in QPointF form
-        element = re.sub("(-|_)", "", element)
+        element = re.sub("(-)", "", element)
         self.__class__ = getattr(sys.modules[__name__], element)
 # -----------------------------------------------------------------------------# remove when element images are made
         # For testing only
-        element = "test_switch"
+        element = "Hybrid"
         # For testing only
 # -----------------------------------------------------------------------------# remove when element images are made
         self.__class__.__init__(self, parent, element, pos)
@@ -42,7 +42,7 @@ class BaseElement(QGraphicsSvgItem):
                             "rd": self.rd}
 
         # Sets
-        self.setPos(self.setImageCenter(position))
+        self.setImageCenter(position)
         self.setText()
         self.setFlags(QGraphicsItem.ItemIsSelectable|
                       QGraphicsItem.ItemIsMovable|
@@ -77,7 +77,7 @@ class BaseElement(QGraphicsSvgItem):
     def setImageCenter(self, pos):
         x = pos.x() - self.boundingRect().width()/2
         y = pos.y() - self.boundingRect().height()/2
-        return QPointF(x, y)
+        self.setPos(QPointF(x, y))
 
     def setText(self):
         topRight    = self.mapToScene(self.boundingRect().topRight())
@@ -200,10 +200,10 @@ class ParameterInputGui(QWidget):
         return dataDict
 #------------------------------------------------------------------------------#               Move to another module? ^
 
-class Hybrids(BaseElement):
+class Hybrid(BaseElement):
 
     def __init__(self, *args):
-        super(Hybrids, self).__init__(args[0], args[1], args[2])
+        super(Hybrid, self).__init__(args[0], args[1], args[2])
         self.guiModule   = hybridParameterGui
         self.portRects   = self.getPortRects()
 
@@ -261,10 +261,10 @@ class Lna(BaseElement):
 class Switch(BaseElement):
     pass
 
-class Isolators(BaseElement):
+class Isolator(BaseElement):
     pass
 
-class Circulators(BaseElement):
+class Circulator(BaseElement):
     pass
 
 class Mux(BaseElement):

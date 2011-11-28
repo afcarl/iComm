@@ -30,7 +30,7 @@ class CGraphicsView(QGraphicsView):
         #       "Click"   if 1 set to 2
         #       "Release" if 2 make sure it's a valid location set to 0
         self.scene.setSceneRect(0.0, 0.0, 250.0, 250.0)
-        self.setScene(self.scene)        
+        self.setScene(self.scene)
 
 #------------------------------------------------------------------------------# mousePressEvent
     def mousePressEvent(self, event):
@@ -67,7 +67,7 @@ class CGraphicsView(QGraphicsView):
             self.line.centerLinkToPort("P1")
             self.clickPhase        = 1
             self.startElement      = item
-            
+
         elif self.clickPhase == 1:
             self.clickPhase = 2
         else:
@@ -121,17 +121,17 @@ class CGraphicsView(QGraphicsView):
             self.line.stopRect    = port[1]
             self.line.centerLinkToPort("P2")
             self.assignId(self.line)
-            self.updateLookup(self.line)
+            #~ self.updateLookup(self.line)
 
             args = (port[0], self.startElement, self.startPort, self.line, "P2")
             item.setPortConnection(args)
-            
+
             args = (self.startPort, item, port[0], self.line, "P1")
             self.startElement.setPortConnection(args)
 
             self.line         = None
             self.startElement = None
-            
+
         # link ended on link element, remove it
         elif module == "links":
             self.scene.removeItem(self.line)
@@ -174,7 +174,7 @@ class CGraphicsView(QGraphicsView):
 
         if collisionTest and collisionTest.__module__ != 'elements':
             return None
-            
+
         elif collisionTest:
             self.scene.clearSelection()
             collisionTest.setSelected(True)
@@ -192,11 +192,11 @@ class CGraphicsView(QGraphicsView):
         newImage = self.assignId(newImage)
         self.scene.addItem(newImage)
         self.setParameterInputGui(newImage)
-        self.updateLookup(newImage)
+        #~ self.updateLookup(newImage)
 
-    def updateLookup(self, obj):
-        self.lookupObj2Id[obj] = obj.eId
-        self.idList.append(obj.eId)
+    #~ def updateLookup(self, obj):
+        #~ self.lookupObj2Id[obj] = obj.eId
+        #~ self.idList.append(obj.eId)
 
     def setParameterInputGui(self, image):
         if self.guiInInspector:

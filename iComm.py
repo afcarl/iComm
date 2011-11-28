@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import Save
+import myPickle as Pickle
 
 
 import sys
@@ -48,8 +48,9 @@ class iComm(QMainWindow):
 
     def onFiletriggered(self, event):
         if str(event.text()) == "Save":
-            print 'save'
-            Save.Pickle().dump(self.view, 'AAA.pkl')
+            Pickle.dump(self.view, "current.pkl")
+        if str(event.text()) == "Open":
+            Pickle.load(self.view, "current.pkl")
 
     def onViewTriggered(self, event):
 
@@ -110,7 +111,7 @@ class iComm(QMainWindow):
                 print x
 
         if event.key() == Qt.Key_S:
-            iCommGlobals.elementClass = "Hybrids"
+            iCommGlobals.elementClass = "Hybrid"
             iCommGlobals.mode = "draw"
             self.statusBar.showMessage(QString("Mode: Edit"))
             self.setMovabilityFlag(True)

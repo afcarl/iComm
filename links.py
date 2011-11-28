@@ -8,18 +8,22 @@ from PyQt4.QtSvg import *
 class LinkFactory(QGraphicsLineItem):
 
     # This class allows us to init a class from a string
-    def __init__(self, parent, element, start):
+    def __init__(self, parent, element, start, stop=None):
         # remove all marks and "_" because our classes do not have these chars.
         # check for the instance in __main__
         self.__class__ = getattr(sys.modules[__name__], element)
-        self.__class__.__init__(self, parent, element, start)
+        self.__class__.__init__(self, parent, element, start, stop)
 
 class BaseLink(QGraphicsLineItem):
 
-    def __init__(self, parent, element, start):
+    def __init__(self, parent, element, start, stop):
 
-        self.start = QPointF(start)
-        self.line  = QLineF(self.start, self.start)
+        self.element  = element
+        self.start    = QPointF(start)
+        if stop:
+            self.line = QLineF(self.start, stop)
+        else:
+            self.line = QLineF(self.start, self.start)
 
         super(BaseLink, self).__init__(self.line)
 
@@ -27,6 +31,7 @@ class BaseLink(QGraphicsLineItem):
         self.rd            = ''
         self.parent        = parent
         self.isHighlighted = True
+
         self.startElement  = None
         self.stopElement   = None
         self.startRect     = None
