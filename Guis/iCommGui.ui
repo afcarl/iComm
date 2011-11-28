@@ -116,7 +116,7 @@
     </property>
     <widget class="QMenu" name="menuAmplifiers">
      <property name="title">
-      <string>Amplifiers</string>
+      <string>Amplifier</string>
      </property>
      <addaction name="actionL_Camp"/>
      <addaction name="actionLNA"/>
@@ -125,28 +125,28 @@
     </widget>
     <widget class="QMenu" name="menuConverters">
      <property name="title">
-      <string>Converters</string>
+      <string>Converter</string>
      </property>
      <addaction name="actionDown_Converter"/>
      <addaction name="actionUp_Converter"/>
     </widget>
     <widget class="QMenu" name="menuFilters">
      <property name="title">
-      <string>Filters</string>
+      <string>Filter</string>
      </property>
      <addaction name="actionIMux"/>
      <addaction name="actionOMux"/>
     </widget>
     <widget class="QMenu" name="menuCouplers">
      <property name="title">
-      <string>Couplers</string>
+      <string>Coupler</string>
      </property>
      <addaction name="actionDirectional"/>
      <addaction name="actionTest_Coupler"/>
     </widget>
     <widget class="QMenu" name="menuHybrids">
      <property name="title">
-      <string>Hybrids</string>
+      <string>Hybrid</string>
      </property>
      <widget class="QMenu" name="menu1_x">
       <property name="title">
@@ -384,7 +384,7 @@
   </action>
   <action name="actionCirculators">
    <property name="text">
-    <string>Circulators</string>
+    <string>Circulator</string>
    </property>
   </action>
   <action name="actionCoax">

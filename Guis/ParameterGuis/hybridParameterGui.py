@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'hybridParameterGui.ui'
 #
-# Created: Mon Nov 28 11:44:55 2011
+# Created: Mon Nov 28 14:19:24 2011
 #      by: PyQt4 UI code generator 4.8.5
 #
 # WARNING! All changes made in this file will be lost!

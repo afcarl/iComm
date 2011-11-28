@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'iCommGui.ui'
 #
-# Created: Mon Nov 28 11:44:54 2011
+# Created: Mon Nov 28 14:19:24 2011
 #      by: PyQt4 UI code generator 4.8.5
 #
 # WARNING! All changes made in this file will be lost!
@@ -63,19 +63,19 @@ class Ui_MainWindow(object):
         self.menuElements.setTitle(QtGui.QApplication.translate("MainWindow", "Elements", None, QtGui.QApplication.UnicodeUTF8))
         self.menuElements.setObjectName(_fromUtf8("menuElements"))
         self.menuAmplifiers = QtGui.QMenu(self.menuElements)
-        self.menuAmplifiers.setTitle(QtGui.QApplication.translate("MainWindow", "Amplifiers", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuAmplifiers.setTitle(QtGui.QApplication.translate("MainWindow", "Amplifier", None, QtGui.QApplication.UnicodeUTF8))
         self.menuAmplifiers.setObjectName(_fromUtf8("menuAmplifiers"))
         self.menuConverters = QtGui.QMenu(self.menuElements)
-        self.menuConverters.setTitle(QtGui.QApplication.translate("MainWindow", "Converters", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuConverters.setTitle(QtGui.QApplication.translate("MainWindow", "Converter", None, QtGui.QApplication.UnicodeUTF8))
         self.menuConverters.setObjectName(_fromUtf8("menuConverters"))
         self.menuFilters = QtGui.QMenu(self.menuElements)
-        self.menuFilters.setTitle(QtGui.QApplication.translate("MainWindow", "Filters", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuFilters.setTitle(QtGui.QApplication.translate("MainWindow", "Filter", None, QtGui.QApplication.UnicodeUTF8))
         self.menuFilters.setObjectName(_fromUtf8("menuFilters"))
         self.menuCouplers = QtGui.QMenu(self.menuElements)
-        self.menuCouplers.setTitle(QtGui.QApplication.translate("MainWindow", "Couplers", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuCouplers.setTitle(QtGui.QApplication.translate("MainWindow", "Coupler", None, QtGui.QApplication.UnicodeUTF8))
         self.menuCouplers.setObjectName(_fromUtf8("menuCouplers"))
         self.menuHybrids = QtGui.QMenu(self.menuElements)
-        self.menuHybrids.setTitle(QtGui.QApplication.translate("MainWindow", "Hybrids", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuHybrids.setTitle(QtGui.QApplication.translate("MainWindow", "Hybrid", None, QtGui.QApplication.UnicodeUTF8))
         self.menuHybrids.setObjectName(_fromUtf8("menuHybrids"))
         self.menu1_x = QtGui.QMenu(self.menuHybrids)
         self.menu1_x.setTitle(QtGui.QApplication.translate("MainWindow", "1:x", None, QtGui.QApplication.UnicodeUTF8))
@@ -186,7 +186,7 @@ class Ui_MainWindow(object):
         self.actionAttenuator.setText(QtGui.QApplication.translate("MainWindow", "Attenuator", None, QtGui.QApplication.UnicodeUTF8))
         self.actionAttenuator.setObjectName(_fromUtf8("actionAttenuator"))
         self.actionCirculators = QtGui.QAction(MainWindow)
-        self.actionCirculators.setText(QtGui.QApplication.translate("MainWindow", "Circulators", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionCirculators.setText(QtGui.QApplication.translate("MainWindow", "Circulator", None, QtGui.QApplication.UnicodeUTF8))
         self.actionCirculators.setObjectName(_fromUtf8("actionCirculators"))
         self.actionCoax = QtGui.QAction(MainWindow)
         self.actionCoax.setText(QtGui.QApplication.translate("MainWindow", "Coax", None, QtGui.QApplication.UnicodeUTF8))
