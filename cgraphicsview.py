@@ -121,7 +121,6 @@ class CGraphicsView(QGraphicsView):
             self.line.stopRect    = port[1]
             self.line.centerLinkToPort("P2")
             self.assignId(self.line)
-            #~ self.updateLookup(self.line)
 
             args = (port[0], self.startElement, self.startPort, self.line, "P2")
             item.setPortConnection(args)
@@ -192,11 +191,6 @@ class CGraphicsView(QGraphicsView):
         newImage = self.assignId(newImage)
         self.scene.addItem(newImage)
         self.setParameterInputGui(newImage)
-        #~ self.updateLookup(newImage)
-
-    #~ def updateLookup(self, obj):
-        #~ self.lookupObj2Id[obj] = obj.eId
-        #~ self.idList.append(obj.eId)
 
     def setParameterInputGui(self, image):
         if self.guiInInspector:
