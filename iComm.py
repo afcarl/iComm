@@ -29,7 +29,7 @@ class iComm(QMainWindow):
         self.ui.menuElements.triggered.connect(self.onElementsTriggered)
         self.ui.menuView.triggered.connect(self.onViewTriggered)
         self.ui.menuFile.triggered.connect(self.onFiletriggered)
-        
+
         self.centerOnScreen()
 
         self.view       = self.ui.GraphicsView
@@ -49,7 +49,7 @@ class iComm(QMainWindow):
     def onFiletriggered(self, event):
         if str(event.text()) == "Save":
             print 'save'
-            Save.Pkl().dump(self.view, 'AAA.pkl')
+            Save.Pickle().dump(self.view, 'AAA.pkl')
 
     def onViewTriggered(self, event):
 

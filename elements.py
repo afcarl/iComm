@@ -28,25 +28,27 @@ class ElementFactory(QGraphicsSvgItem):
 class BaseElement(QGraphicsSvgItem):
 
     def __init__(self, parent, element, position):
-        self.image = os.path.join("Images", element.lower(), "drawing.svg")
+
+        self.parent  = parent     # referance to view
+        self.element = element
+        self.image   = os.path.join("Images", element.lower(), "drawing.svg")
+
         super(BaseElement, self).__init__(self.image)
 
-        self.setImageColor("green")     # set element selected color
-        self.setPos(self.setImageCenter(position))
-
-        self.parent      = parent     # referance to view
-        self.ueId        = None       # unique ID assigned by the program
-        self.eId         = self.ueId  # custom ID assigned by the user
+        self.eId         = None       # custom ID assigned by the user
         self.rd          = ""         # RD in parent form
         self.freshGui    = True
         self.enteredDict = {"id": self.eId,
                             "rd": self.rd}
 
+        # Sets
+        self.setPos(self.setImageCenter(position))
         self.setText()
         self.setFlags(QGraphicsItem.ItemIsSelectable|
                       QGraphicsItem.ItemIsMovable|
                       QGraphicsItem.ItemSendsScenePositionChanges)
         self.setAcceptHoverEvents(True)
+        self.setImageColor("green")
 #------------------------------------------------------------------------------# Overrides
     def hoverEnterEvent(self, event):
         self.setImageColor("green")
@@ -54,7 +56,7 @@ class BaseElement(QGraphicsSvgItem):
     def hoverMoveEvent(self, event):
         point = QPointF(event.pos())
         self.getCurrentPort(point)
-        
+
     def hoverLeaveEvent(self, event):
         self.setImageColor("black")
 #------------------------------------------------------------------------------# Overrides
@@ -204,9 +206,9 @@ class Hybrids(BaseElement):
         super(Hybrids, self).__init__(args[0], args[1], args[2])
         self.guiModule   = hybridParameterGui
         self.portRects   = self.getPortRects()
-        
+
         # key   == current element's J port
-        # value == element connected to 
+        # value == element connected to
         #          port of element connnected to
         #          coax connecting them
         #          side of the coax being used on the key
@@ -233,7 +235,7 @@ class Hybrids(BaseElement):
     def updateEnteredDict(self, data):
         self.enteredDict = data
         for attr in data:
-            setattr(self, attr, data[attr])        
+            setattr(self, attr, data[attr])
         self.rdText.update(self.enteredDict["rd"])
 
 
