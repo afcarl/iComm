@@ -1,0 +1,18 @@
+iComm
+
+This is a modified program of my block diagram editor that I was making for a circuit simulator.  
+I realized that I could apply this to my job and am now making a satellite simulator tailored 
+towards payload budgets, radiation susceptibility/emission, non-conformance report tracker, live 
+satellite status viewer, SSI trender.
+
+Todo (Soon):
+make snap to grid
+draw elements 
+tweak ui
+make re/rs plugin
+start making documentation using Sphinx
+
+Todo (Later):
+convert to PySide, this is almost transparent to PyQt and is more pythonic.
+rebuild save load feature.  It's too complicated right now and if anything is added to the save
+list, too many place need to be updated.
