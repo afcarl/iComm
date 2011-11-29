@@ -15,7 +15,7 @@ class dump(object):
 
             if element.__module__ == "elements":
                 connections  = self.obj2Id(element)
-                position     = element.pos()
+                position     = element.position
                 entries      = element.enteredDict
                 ID           = element.eId
                 module       = element.__module__
@@ -48,7 +48,7 @@ class dump(object):
     def obj2Id(self, obj):
         copy = {}
         for port in obj.connections:
-            connections    = obj.connections[port][:]
+            connections = obj.connections[port][:]
 
             try:
                 elemId = connections[0].eId
@@ -95,7 +95,6 @@ class load(object):
                 position = obj.position
                 elem     = ElementFactory(self.view, element, position)
 
-                elem.setPos(position)
                 elem.eId         = ID
                 elem.connections = obj.connections
                 elem.enteredDict = obj.entries

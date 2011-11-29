@@ -35,6 +35,7 @@ class BaseElement(QGraphicsSvgItem):
 
         super(BaseElement, self).__init__(self.image)
 
+        self.position    = position
         self.eId         = None       # custom ID assigned by the user
         self.freshGui    = True
         self.enteredDict = {"id": self.eId,
@@ -74,9 +75,9 @@ class BaseElement(QGraphicsSvgItem):
         return self.gui
 
     def setImageCenter(self, pos):
-        x = pos.x() - self.boundingRect().width()/2
-        y = pos.y() - self.boundingRect().height()/2
-        self.setPos(QPointF(x, y))
+        pos = QPointF(pos)
+        pos = pos - self.boundingRect().center()
+        self.setPos(pos)
 
     def setText(self, text):
         topRight    = self.mapToScene(self.boundingRect().topRight())

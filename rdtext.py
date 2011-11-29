@@ -1,7 +1,5 @@
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from PyQt4.QtSvg import *
-
 
 class RdText(QGraphicsTextItem):
 
