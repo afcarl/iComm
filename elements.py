@@ -47,7 +47,7 @@ class BaseElement(QGraphicsSvgItem):
                       QGraphicsItem.ItemIsMovable|
                       QGraphicsItem.ItemSendsScenePositionChanges)
         self.setAcceptHoverEvents(True)
-        self.setImageColor("green")
+        self.setImageColor("black")
 #------------------------------------------------------------------------------# Overrides
     def hoverEnterEvent(self, event):
         self.setImageColor("green")

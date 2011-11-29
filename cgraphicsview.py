@@ -12,8 +12,8 @@ class CGraphicsView(QGraphicsView):
     def __init__(self, parent):
 
         super(CGraphicsView, self).__init__(parent)
-        self.parent               = parent
-        self.iComm                = self.parent.parent()
+        
+        self.iComm                = parent.parent()
         self.mousePressPosition   = None
         self.mouseReleasePosition = None
         self.selectedItemHistory  = []
@@ -35,7 +35,7 @@ class CGraphicsView(QGraphicsView):
 #------------------------------------------------------------------------------# mousePressEvent
     def mousePressEvent(self, event):
         super(CGraphicsView, self).mousePressEvent(event)
-        if self.iComm.mode == "draw":
+        if self.iComm.mode in ["draw", None]:
             self.mousePressEvent_Draw(event)
         elif self.iComm.mode == "link":
             self.mousePressEvent_Link(event)
@@ -90,7 +90,7 @@ class CGraphicsView(QGraphicsView):
 #------------------------------------------------------------------------------# mouseReleaseEvent
     def mouseReleaseEvent(self, event):
         super(CGraphicsView, self).mouseReleaseEvent(event)
-        if self.iComm.mode == "draw":
+        if self.iComm.mode in ["draw", None]:
             self.mouseReleaseEvent_Draw(event)
         elif self.iComm.mode == "link":
             self.mouseReleaseEvent_Link(event)
@@ -163,21 +163,27 @@ class CGraphicsView(QGraphicsView):
             # set the selection color.
             map(lambda x: x.update(), self.scene.selectedItems())
             return None
-
+            
         if self.iComm.elementClass:
             newImage = elements.ElementFactory(self,
                                                self.iComm.elementClass,
                                                self.mousePressPosition)
+            # check if new image will collide with other images.
+            collisionTest = self.checkForCollision(newImage)
+        elif self.iComm.mode == None:
+            pos = QPointF(self.mousePressPosition)
+            try:
+                collisionTest = self.scene.items(pos)[0]
+            except IndexError:
+                return None
+            
         else:
             return None
-        # check if new image will collide with other images.  there should be
-        # a better way of doing this section.
-        collisionTest = self.checkForCollision(newImage)
 
         if collisionTest and collisionTest.__module__ != 'elements':
             return None
 
-        elif collisionTest:
+        elif collisionTest or self.iComm.mode == None:
             self.scene.clearSelection()
             collisionTest.setSelected(True)
             self.setParameterInputGui(collisionTest)
@@ -200,8 +206,8 @@ class CGraphicsView(QGraphicsView):
     def setParameterInputGui(self, image):
         if self.guiInInspector:
             # clear the gui that's in Inspector
-
             # I dont fully understand this.  For some reason, without the try
+
             # statment, if you reload edit, reload edit again it will error out
             # referencing a text obj that is not longer valid.  I can't find out
             # why.  This appears to fix the problem though.

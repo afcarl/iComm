@@ -39,6 +39,8 @@ class iComm(QMainWindow):
 
         self.centerOnScreen()
 
+        self.statusBar.showMessage(QString("Mode: Free"))
+
     def onFileTriggered(self, event):
         if str(event.text()) == "Save":
             Pickle.dump(self.view, "current.pkl")
@@ -86,27 +88,13 @@ class iComm(QMainWindow):
             self.mode = "draw"
 
     def keyPressEvent(self, event):
-        if event.text() == "q":
+        if event.key() == Qt.Key_Escape and self.mode:
+            self.mode = None
+            self.statusBar.showMessage(QString("Mode: Free"))
+        elif event.key() == Qt.Key_Escape and not self.mode:
             sys.exit(1)
 
 #------------------------------------------------------------------------------- Testing
-        if event.text() == "e":
-            for x in self.elements():
-                print x.__class__.__name__, x.eId
-            print "\n-------------"
-
-        if event.text() == "t":
-            tree = []
-            for x in self.view.scene.items():
-                if not x.__class__.__name__ == "Coax":
-                    t = [(x.eId, y) for y in x.linksTo]
-                    f = [(y, x.eId) for y in x.linksFrom]
-                    tree.extend(t + f)
-            tree = list(set(tree))
-            tree.sort(key=lambda x: x[0])
-            for x in tree:
-                print x
-
         if event.key() == Qt.Key_S:
             self.elementClass = "Hybrid"
             self.mode = "draw"
@@ -118,9 +106,6 @@ class iComm(QMainWindow):
             self.mode = "link"
             self.statusBar.showMessage(QString("Mode: Link"))
             self.setMovabilityFlag(False)
-
-        if event.key() == Qt.Key_F1:
-            print "test F1"
 #------------------------------------------------------------------------------- Testing
 
     def setMovabilityFlag(self, bool):
