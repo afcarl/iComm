@@ -142,10 +142,10 @@ class ParameterInputGui(QWidget):
         self.ui.Clear.clicked.connect(self.clickedClear)
         self.ui.Delete.clicked.connect(self.clickedDelete)
 
-        if caller.freshGui:
-            # if this is the first time we're placing the gui for this element
-            # we will clear the fields to build dict otherwise we'll set data
-            self.clearFields()
+        ##if caller.freshGui:
+            ### if this is the first time we're placing the gui for this element
+            ### we will clear the fields to build dict otherwise we'll set data
+            ##self.clearFields()
         self.setData()
         self.show()
 
@@ -166,14 +166,29 @@ class ParameterInputGui(QWidget):
 #------------------------------------------------------------------------------- Clicks
 #                                                                                -------------
 #------------------------------------------------------------------------------- Data handlers
+
     def setData(self):
         d = self.caller.enteredDict
         for child in self.children():
             if str(child.__class__.__name__) == "QLineEdit":
-                child.setText(QString(d[str(child.objectName())]))
+                try:
+                    child.setText(QString(d[str(child.objectName())]))
+                except TypeError:
+                    # trying to set None to QString
+                    pass
+                except KeyError:
+                    # key not in dictionary
+                    pass
 
             if str(child.__class__.__name__) == "QCheckBox":
-                child.setChecked(d[str(child.objectName())])
+                try:
+                    child.setChecked(d[str(child.objectName())])
+                except TypeError:
+                    # trying to set None to QString
+                    pass
+                except KeyError:
+                    # key not in dictionary
+                    pass
 
     def clearFields(self):
         dataDict = {}

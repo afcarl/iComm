@@ -32,6 +32,7 @@ class CGraphicsView(QGraphicsView):
         self.scene.setSceneRect(0.0, 0.0, 250.0, 250.0)
         self.setScene(self.scene)
 
+        self.line = None
 #------------------------------------------------------------------------------# mousePressEvent
     def mousePressEvent(self, event):
         super(CGraphicsView, self).mousePressEvent(event)
@@ -140,6 +141,13 @@ class CGraphicsView(QGraphicsView):
             self.startElement = None
         self.clickPhase = 0
 #------------------------------------------------------------------------------# mouseReleaseEvent
+    def keyPressEvent(self, event):
+        super(CGraphicsView, self).keyPressEvent(event)
+        if event.key() == Qt.Key_Escape and self.line:
+            self.scene.removeItem(self.line)
+            self.line = None
+            self.clickPhase = 0
+
     def makeLine(self, p1):
         line = links.LinkFactory(self, self.iComm.elementClass, p1)
         self.scene.addItem(line)
@@ -170,24 +178,31 @@ class CGraphicsView(QGraphicsView):
                                                self.mousePressPosition)
             # check if new image will collide with other images.
             collisionTest = self.checkForCollision(newImage)
+            
         elif self.iComm.mode == None:
             pos = QPointF(self.mousePressPosition)
             try:
                 collisionTest = self.scene.items(pos)[0]
             except IndexError:
+                # in free mode and clicked with an empty scene
                 return None
-            
         else:
             return None
 
-        if collisionTest and collisionTest.__module__ != 'elements':
+
+        if collisionTest and collisionTest.__module__ != "elements":
+            newImage.remove()
             return None
 
         elif collisionTest or self.iComm.mode == None:
             self.scene.clearSelection()
             collisionTest.setSelected(True)
             self.setParameterInputGui(collisionTest)
-            newImage.remove()
+            try:
+                newImage.remove()
+            except UnboundLocalError:
+                # in Free mode from link and clicked on an element
+                pass
             return None
 
         elif (not collisionTest) and (len(self.selectedItemHistory) >= 2):
@@ -223,6 +238,7 @@ class CGraphicsView(QGraphicsView):
 
     def assignId(self, element):
         element.eId = str(time.time())
+        element.enteredDict["id"] = element.eId
         return element
 
     def checkForCollision(self, newImage):
@@ -236,4 +252,3 @@ class CGraphicsView(QGraphicsView):
 if __name__ == "__main__":
     import iComm
     iComm.RunGui()
-

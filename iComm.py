@@ -89,7 +89,10 @@ class iComm(QMainWindow):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape and self.mode:
+            if self.mode == "link":
+                pass
             self.mode = None
+            self.elementClass = None
             self.statusBar.showMessage(QString("Mode: Free"))
         elif event.key() == Qt.Key_Escape and not self.mode:
             sys.exit(1)

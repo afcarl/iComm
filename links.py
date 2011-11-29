@@ -37,6 +37,7 @@ class BaseLink(QGraphicsLineItem):
         self.startRect     = None
         self.stopRect      = None
 
+        self.enteredDict   = {"id": self.eId}
         self.color = Qt.white
         self.setFlags(QGraphicsItem.ItemSendsScenePositionChanges)
         self.setZValue(-1)

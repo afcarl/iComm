@@ -102,6 +102,8 @@ class load(object):
                 elem.eId         = ID
                 elem.connections = obj.connections
                 elem.enteredDict = obj.entries
+                print elem.enteredDict
+                elem.rdText.update(obj.entries["rd"])
                 lookup[ID] = elem
                 self.view.scene.addItem(elem)
 
