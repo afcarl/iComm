@@ -1,22 +1,12 @@
 #!/usr/bin/python
 
-import myPickle as Pickle
-
-
 import sys
 import os
+import myPickle as Pickle
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore  import *
+from PyQt4.QtGui   import *
 from Guis.iCommGui import Ui_MainWindow
-
-import icommglobals
-
-# make an instance of icommglobals.Globas in __builtins__ to allow all modules
-# access to my custom class.  Probably should do this with Qt.emit() but this
-# way appears to be much cleaner and nicer for my needs.  Also I'm not affraid
-# of python ever coming up with the builtin function name iCommGlobals
-__builtins__.iCommGlobals = icommglobals.Globals()
 
 class iComm(QMainWindow):
 
@@ -25,12 +15,13 @@ class iComm(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
+        self.mode         = None
+        self.elementClass = None
+
         # make connection with menuElements and function handler
         self.ui.menuElements.triggered.connect(self.onElementsTriggered)
         self.ui.menuView.triggered.connect(self.onViewTriggered)
-        self.ui.menuFile.triggered.connect(self.onFiletriggered)
-
-        self.centerOnScreen()
+        self.ui.menuFile.triggered.connect(self.onFileTriggered)
 
         self.view       = self.ui.GraphicsView
         self.objInspect = self.ui.Inspector     # dock for obj inspection
@@ -46,11 +37,16 @@ class iComm(QMainWindow):
         self.pyInterp.updateInterpreterLocals(self.objInspect, "inspector")
         self.pyInterp.updateInterpreterLocals(self.pyDock, "pythonDock")
 
-    def onFiletriggered(self, event):
+        self.centerOnScreen()
+
+    def onFileTriggered(self, event):
         if str(event.text()) == "Save":
             Pickle.dump(self.view, "current.pkl")
         if str(event.text()) == "Open":
+           
             self.view.scene.clear()
+            self.mode = None
+            self.statusBar.showMessage(QString("Mode: Free"))
             Pickle.load(self.view, "current.pkl")
 
     def onViewTriggered(self, event):
@@ -83,11 +79,11 @@ class iComm(QMainWindow):
 
         # when any menu selection under Elements has been selected, change
         # the current active element to the selected element.
-        iCommGlobals.elementClass = str(event.text())
-        if filter(lambda x: x == iCommGlobals.elementClass, ["Waveguide", "Coax"]):
-            iCommGlobals.mode = "link"
+        self.elementClass = str(event.text())
+        if filter(lambda x: x == self.elementClass, ["Waveguide", "Coax"]):
+            self.mode = "link"
         else:
-            iCommGlobals.mode = "draw"
+            self.mode = "draw"
 
     def keyPressEvent(self, event):
         if event.text() == "q":
@@ -112,14 +108,14 @@ class iComm(QMainWindow):
                 print x
 
         if event.key() == Qt.Key_S:
-            iCommGlobals.elementClass = "Hybrid"
-            iCommGlobals.mode = "draw"
+            self.elementClass = "Hybrid"
+            self.mode = "draw"
             self.statusBar.showMessage(QString("Mode: Edit"))
             self.setMovabilityFlag(True)
 
         if event.key() == Qt.Key_C:
-            iCommGlobals.elementClass = "Coax"
-            iCommGlobals.mode = "link"
+            self.elementClass = "Coax"
+            self.mode = "link"
             self.statusBar.showMessage(QString("Mode: Link"))
             self.setMovabilityFlag(False)
 
@@ -145,7 +141,8 @@ class RunGui():
         app = QApplication(sys.argv)
         myapp = iComm()
         myapp.show()
-        app.setStyle(QStyleFactory.create("plastique"))
+        if sys.platform != "linux2":
+            app.setStyle(QStyleFactory.create("plastique"))
         sys.exit(app.exec_())
 
 if __name__ == "__main__":

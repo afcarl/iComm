@@ -35,9 +35,9 @@ class CGraphicsView(QGraphicsView):
 #------------------------------------------------------------------------------# mousePressEvent
     def mousePressEvent(self, event):
         super(CGraphicsView, self).mousePressEvent(event)
-        if iCommGlobals.mode == "draw":
+        if self.iComm.mode == "draw":
             self.mousePressEvent_Draw(event)
-        elif iCommGlobals.mode == "link":
+        elif self.iComm.mode == "link":
             self.mousePressEvent_Link(event)
 
     def mousePressEvent_Draw(self, event):
@@ -90,9 +90,9 @@ class CGraphicsView(QGraphicsView):
 #------------------------------------------------------------------------------# mouseReleaseEvent
     def mouseReleaseEvent(self, event):
         super(CGraphicsView, self).mouseReleaseEvent(event)
-        if iCommGlobals.mode == "draw":
+        if self.iComm.mode == "draw":
             self.mouseReleaseEvent_Draw(event)
-        elif iCommGlobals.mode == "link":
+        elif self.iComm.mode == "link":
             self.mouseReleaseEvent_Link(event)
 
     def mouseReleaseEvent_Draw(self, event):
@@ -141,7 +141,7 @@ class CGraphicsView(QGraphicsView):
         self.clickPhase = 0
 #------------------------------------------------------------------------------# mouseReleaseEvent
     def makeLine(self, p1):
-        line = links.LinkFactory(self, iCommGlobals.elementClass, p1)
+        line = links.LinkFactory(self, self.iComm.elementClass, p1)
         self.scene.addItem(line)
         return line
 
@@ -164,9 +164,9 @@ class CGraphicsView(QGraphicsView):
             map(lambda x: x.update(), self.scene.selectedItems())
             return None
 
-        if iCommGlobals.elementClass:
+        if self.iComm.elementClass:
             newImage = elements.ElementFactory(self,
-                                               iCommGlobals.elementClass,
+                                               self.iComm.elementClass,
                                                self.mousePressPosition)
         else:
             return None
@@ -200,11 +200,18 @@ class CGraphicsView(QGraphicsView):
     def setParameterInputGui(self, image):
         if self.guiInInspector:
             # clear the gui that's in Inspector
-            self.guiInInspector.getData()
+
+            # I dont fully understand this.  For some reason, without the try
+            # statment, if you reload edit, reload edit again it will error out
+            # referencing a text obj that is not longer valid.  I can't find out
+            # why.  This appears to fix the problem though.
+            try:
+                self.guiInInspector.getData()
+            except:
+                pass
             self.guiInInspector.setParent(None)
 
         gui = image.setObjectGui(self.iComm.ui.Stack)
-        gui.setData()
         self.guiInInspector = gui
         self.iComm.ui.Inspector.setFixedWidth(gui.size().width())
 
@@ -219,3 +226,8 @@ class CGraphicsView(QGraphicsView):
             if item.collidesWithItem(newImage):
                 return item
         return False
+
+if __name__ == "__main__":
+    import iComm
+    iComm.RunGui()
+

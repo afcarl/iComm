@@ -35,11 +35,10 @@ class BaseElement(QGraphicsSvgItem):
 
         super(BaseElement, self).__init__(self.image)
 
-        self.position    = position
-        self.eId         = None       # custom ID assigned by the user
-        self.freshGui    = True
-        self.enteredDict = {"id": self.eId,
-                            "rd": "xxx"}
+        self.eId          = None       # custom ID assigned by the user
+        self.freshGui     = True
+        self.enteredDict  = {"id": self.eId,
+                             "rd": "xxx"}
 
         # Sets
         self.setImageCenter(position)

@@ -15,7 +15,11 @@ class dump(object):
 
             if element.__module__ == "elements":
                 connections  = self.obj2Id(element)
-                position     = element.position
+                # because Qt uses top right for position we need to shift elem
+                # back from center to top right.  This will take the current pos
+                # and shift if off by center.  When the element is rebuilt
+                # the element is shifted back by rect.center.
+                position     = element.pos() + element.boundingRect().center()
                 entries      = element.enteredDict
                 ID           = element.eId
                 module       = element.__module__

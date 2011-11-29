@@ -5,9 +5,9 @@ class RdText(QGraphicsTextItem):
 
     def __init__(self, text, pos):
 
-        self.text   = QString(text)
+        self.text = QString(text)
         super(RdText, self).__init__(self.text)
-        self.height   = self.boundingRect().height()
+        self.height = self.boundingRect().height()
         self.setPosition(pos)
         self.setDefaultTextColor(Qt.white)
 
