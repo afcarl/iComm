@@ -36,14 +36,13 @@ class BaseElement(QGraphicsSvgItem):
         super(BaseElement, self).__init__(self.image)
 
         self.eId         = None       # custom ID assigned by the user
-        self.rd          = ""         # RD in parent form
         self.freshGui    = True
         self.enteredDict = {"id": self.eId,
-                            "rd": self.rd}
+                            "rd": "xxx"}
 
         # Sets
         self.setImageCenter(position)
-        self.setText()
+        self.setText(self.enteredDict["rd"])
         self.setFlags(QGraphicsItem.ItemIsSelectable|
                       QGraphicsItem.ItemIsMovable|
                       QGraphicsItem.ItemSendsScenePositionChanges)
@@ -79,10 +78,11 @@ class BaseElement(QGraphicsSvgItem):
         y = pos.y() - self.boundingRect().height()/2
         self.setPos(QPointF(x, y))
 
-    def setText(self):
+    def setText(self, text):
         topRight    = self.mapToScene(self.boundingRect().topRight())
-        self.rdText = RdText(self.rd, topRight)
+        self.rdText = RdText(text, topRight)
         self.parent.scene.addItem(self.rdText)
+
 #------------------------------------------------------------------------------# Sets
 #                                                                              # ------
 #------------------------------------------------------------------------------# Custom
@@ -120,6 +120,10 @@ class BaseElement(QGraphicsSvgItem):
         self.setElementId(QString("center"))
         self.currentPort = None
         return None
+
+    def remove(self):
+        self.rdText.setParent(None)
+        self.setParent(None)
 #------------------------------------------------------------------------------#               Move to another module? v
 class ParameterInputGui(QWidget):
 

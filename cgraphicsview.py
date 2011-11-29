@@ -54,7 +54,10 @@ class CGraphicsView(QGraphicsView):
         except AttributeError:
             self.startElement = None
             self.clickPhase   = 0
-            self.scene.removeItem(self.line)
+            try:
+                self.scene.removeItem(self.line)
+            except AttributeError:
+                pass
             return
 
         if not port:
@@ -178,6 +181,7 @@ class CGraphicsView(QGraphicsView):
             self.scene.clearSelection()
             collisionTest.setSelected(True)
             self.setParameterInputGui(collisionTest)
+            newImage.remove()
             return None
 
         elif (not collisionTest) and (len(self.selectedItemHistory) >= 2):
@@ -191,6 +195,7 @@ class CGraphicsView(QGraphicsView):
         newImage = self.assignId(newImage)
         self.scene.addItem(newImage)
         self.setParameterInputGui(newImage)
+        newImage.update()
 
     def setParameterInputGui(self, image):
         if self.guiInInspector:

@@ -16,5 +16,8 @@ class RdText(QGraphicsTextItem):
     def setPosition(self, pos):
         self.setPos(QPointF(pos.x(), pos.y() - self.height))
 
-    def update(self, text):
-        self.setPlainText(text)
+    def update(self, text=None):
+        if text:
+            self.setPlainText(text)
+        else:
+            self.setPlainText(self.text)

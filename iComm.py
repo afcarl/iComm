@@ -50,6 +50,7 @@ class iComm(QMainWindow):
         if str(event.text()) == "Save":
             Pickle.dump(self.view, "current.pkl")
         if str(event.text()) == "Open":
+            self.view.scene.clear()
             Pickle.load(self.view, "current.pkl")
 
     def onViewTriggered(self, event):

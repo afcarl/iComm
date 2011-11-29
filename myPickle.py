@@ -75,13 +75,18 @@ class load(object):
         fileload = open(filename, "rb")
         items    = pickle.load(fileload)
 
-        lookup = self.buildElements(items)
+        lookup, elemList = self.buildElements(items)
         self.setConnections(lookup)
+        self.setElementsToScene(elemList)
 
+    def setElementsToScene(self, elemList):
+        for elem in elemList:
+            self.view.scene.addItem(elem)
 
     def buildElements(self, items):
 
         lookup = {None: None}
+        elemList = []
 
         for ID in items:
             obj = items[ID]
@@ -95,7 +100,7 @@ class load(object):
                 elem.connections = obj.connections
                 elem.enteredDict = obj.entries
                 lookup[ID] = elem
-                self.scene.addItem(elem)
+                self.view.scene.addItem(elem)
 
             elif obj.module == "links":
                 element    = obj.element
@@ -109,10 +114,10 @@ class load(object):
                 link.startRect    = obj.startRect
                 link.stopRect     = obj.stopRect
                 lookup[ID]        = link
-
-                self.scene.addItem(link)
-
-        return lookup
+                self.view.scene.addItem(link)
+            else:
+                return
+        return lookup, elemList
 
     def setConnections(self, lookup):
 
