@@ -8,11 +8,11 @@ from PyQt4.QtGui  import *
 from PyQt4.QtSvg  import *
 
 class CGraphicsView(QGraphicsView):
-    # graphicsView
+
     def __init__(self, parent):
 
         super(CGraphicsView, self).__init__(parent)
-        
+
         self.iComm                = parent.parent()
         self.mousePressPosition   = None
         self.mouseReleasePosition = None
@@ -171,14 +171,14 @@ class CGraphicsView(QGraphicsView):
             # set the selection color.
             map(lambda x: x.update(), self.scene.selectedItems())
             return None
-            
+
         if self.iComm.elementClass:
             newImage = elements.ElementFactory(self,
                                                self.iComm.elementClass,
                                                self.mousePressPosition)
             # check if new image will collide with other images.
             collisionTest = self.checkForCollision(newImage)
-            
+
         elif self.iComm.mode == None:
             pos = QPointF(self.mousePressPosition)
             try:
