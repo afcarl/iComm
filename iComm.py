@@ -82,7 +82,7 @@ class iComm(QMainWindow):
         # when any menu selection under Elements has been selected, change
         # the current active element to the selected element.
         self.elementClass = str(event.text())
-        if filter(lambda x: x == self.elementClass, ["Waveguide", "Coax"]):
+        if self.elementClass in ["Waveguide", "Coax"]:
             self.mode = "link"
         else:
             self.mode = "draw"
