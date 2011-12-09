@@ -3,6 +3,8 @@
 import sys
 import os
 import myPickle as Pickle
+import Plugins
+
 
 from PyQt4.QtCore  import *
 from PyQt4.QtGui   import *
@@ -15,13 +17,14 @@ class iComm(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.mode         = None
         self.elementClass = None
 
         # make connection with menuElements and function handler
+        self.menubar = self.ui.menubar
         self.ui.menuElements.triggered.connect(self.onElementsTriggered)
         self.ui.menuView.triggered.connect(self.onViewTriggered)
         self.ui.menuFile.triggered.connect(self.onFileTriggered)
+        self.setUpPluginsMenu()
 
         self.view       = self.ui.GraphicsView
         self.objInspect = self.ui.Inspector     # dock for obj inspection
@@ -37,22 +40,39 @@ class iComm(QMainWindow):
         self.pyInterp.updateInterpreterLocals(self.objInspect, "inspector")
         self.pyInterp.updateInterpreterLocals(self.pyDock, "pythonDock")
 
-        self.centerOnScreen()
+        self.setToCenter()
+        self.setMode("free")
+# ---------------------------------------------------------------------------- #
+#
+# ---------------------------------------------------------------------------- #
+    def setUpPluginsMenu(self):
+        menu = self.menubar.addMenu("Plugins")
+        for name in self.getListOfPlugins():
+            menu.addAction(name)
+        menu.triggered.connect(self.onPluginsTriggered)
 
-        self.statusBar.showMessage(QString("Mode: Free"))
-
+    def getListOfPlugins(self):
+        dirs = os.listdir(Plugins.__path__[0])
+        dirs = filter(lambda x: ".py" not in x, dirs)
+        dirs = filter(lambda x: x[0] != "_", dirs)
+        dirs.sort()
+        for d in dirs:
+            string = "Plugins." + d + ".info"
+            __import__(string)
+            yield sys.modules[string].info["menu name"]
+# ---------------------------------------------------------------------------- #
+# ------------------------------ Menu Handlers ------------------------------- #
+# ---------------------------------------------------------------------------- # File
     def onFileTriggered(self, event):
         if str(event.text()) == "Save":
             Pickle.dump(self.view, "current.pkl")
+
         if str(event.text()) == "Open":
-           
             self.view.scene.clear()
-            self.mode = None
-            self.statusBar.showMessage(QString("Mode: Free"))
+            self.setMode("free")
             Pickle.load(self.view, "current.pkl")
-
+    # ------------------------------------------------------------------------ # View
     def onViewTriggered(self, event):
-
         if str(event.text()) == "Python Console":
             if self.pyDock.isVisible():
                 self.pyDock.hide()
@@ -64,7 +84,20 @@ class iComm(QMainWindow):
                 self.objInspect.hide()
             else:
                 self.objInspect.show()
-
+    # ------------------------------------------------------------------------ # Elements
+    def onElementsTriggered(self, event):
+        print self.getMenuBacktrack(event)
+        # when any menu selection under Elements has been selected, change
+        # the current active element to the selected element.
+        self.elementClass = str(event.text())
+        if self.elementClass in ["Waveguide", "Coax"]:
+            self.mode = "link"
+        else:
+            self.mode = "draw"
+    # ------------------------------------------------------------------------ # Plugins
+    def onPluginsTriggered(self, event):
+        print event.text()
+    # ------------------------------------------------------------------------ # getMenuBacktrack
     def getMenuBacktrack(self, event):
         # take the event and backtrack through parents getting the title
         # along the way to get list of sub menus used.
@@ -74,43 +107,30 @@ class iComm(QMainWindow):
             backtrack.append(str(previousWidget.title()))
             previousWidget = previousWidget.parent()
         return backtrack
-
-    def onElementsTriggered(self, event):
-
-        print self.getMenuBacktrack(event)
-
-        # when any menu selection under Elements has been selected, change
-        # the current active element to the selected element.
-        self.elementClass = str(event.text())
-        if self.elementClass in ["Waveguide", "Coax"]:
-            self.mode = "link"
-        else:
-            self.mode = "draw"
-
+# ---------------------------------------------------------------------------- #
+#
+# ---------------------------------------------------------------------------- #
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape and self.mode:
             if self.mode == "link":
                 pass
-            self.mode = None
             self.elementClass = None
-            self.statusBar.showMessage(QString("Mode: Free"))
+            self.setMode("free")
         elif event.key() == Qt.Key_Escape and not self.mode:
             sys.exit(1)
-
-#------------------------------------------------------------------------------- Testing
+    # ------------------------------------------------------------------------ # Testing
         if event.key() == Qt.Key_S:
             self.elementClass = "Hybrid"
-            self.mode = "draw"
-            self.statusBar.showMessage(QString("Mode: Edit"))
+            self.setMode("draw")
             self.setMovabilityFlag(True)
 
         if event.key() == Qt.Key_C:
             self.elementClass = "Coax"
-            self.mode = "link"
-            self.statusBar.showMessage(QString("Mode: Link"))
+            self.setMode("link")
             self.setMovabilityFlag(False)
-#------------------------------------------------------------------------------- Testing
-
+# ---------------------------------------------------------------------------- #
+# ------------------------------------Sets------------------------------------ #
+# ---------------------------------------------------------------------------- #
     def setMovabilityFlag(self, bool):
         # toggle the movability of elements
         # we don't want elements to be moved when in link mode
@@ -118,11 +138,19 @@ class iComm(QMainWindow):
         items = filter(lambda x: x.__module__ == "elements", items)
         map(lambda x: x.setFlag(QGraphicsItem.ItemIsMovable, bool), items)
 
-    def centerOnScreen(self):
+    def setToCenter(self):
         resolution = QDesktopWidget().screenGeometry()
-        self.move((resolution.width()  / 2) - (self.frameSize().width()  / 2),
-                  (resolution.height() / 2) - (self.frameSize().height() / 2))
+        x = resolution.width() / 2 - self.frameSize().width() / 2
+        y = resolution.height()/ 2 - self.frameSize().height()/ 2
+        self.move(x, y)
 
+    def setMode(self, mode):
+        self.mode = mode
+        string = "Mode: " + mode.capitalize()
+        self.statusBar.showMessage(string)
+# ---------------------------------------------------------------------------- #
+# -----------------------------------Runner----------------------------------- #
+# ---------------------------------------------------------------------------- #
 class RunGui():
 
     def __init__(self):
