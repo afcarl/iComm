@@ -31,7 +31,7 @@ class BaseElement(QGraphicsSvgItem):
 
         self.parent  = parent     # referance to view
         self.element = element
-        self.image   = os.path.join("Images", element.lower(), "drawing.svg")
+        self.image   = os.path.join("Images", element.lower(), "hybrid1.2.svg")
 
         super(BaseElement, self).__init__(self.image)
 
