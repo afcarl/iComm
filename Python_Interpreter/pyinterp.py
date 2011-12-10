@@ -47,7 +47,7 @@ class PyInterp(QTextEdit):
         super(PyInterp,  self).__init__(parent)
 
         sys.stdout              = self
-        sys.stderr              = self
+        #sys.stderr              = self
         self.refreshMarker      = False # to change back to >>> from ...
         self.multiLine          = False # code spans more than one line
         self.command            = ''    # command to be ran

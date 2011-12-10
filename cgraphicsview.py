@@ -14,15 +14,16 @@ class CGraphicsView(QGraphicsView):
         super(CGraphicsView, self).__init__(parent)
 
         self.iComm                = parent.parent()
+        self.scene                = QGraphicsScene(parent)
         self.mousePressPosition   = None
         self.mouseReleasePosition = None
-        self.selectedItemHistory  = []
+        self.line                 = None
         self.startElement         = None
         self.guiInInspector       = None
-        self.scene                = QGraphicsScene(parent)
-        self.lookupObj2Id         = {None: None}
-        self.idList               = []
-        self.clickPhase           = 0                                                    # Needs to be reset when changing modes
+        self.selectedItemHistory  = []
+        self.clickPhase           = 0                                          # Needs to be reset when changing modes
+        self.xSpacing             = 64 # spacing of elements snap to point
+        self.ySpacing             = 48 # spacing of elements snap to point
         # used for click-move-click with links insted of click-drag-release
         # Theory:
         #       "Click"   if 0 build link set to 1
@@ -32,11 +33,10 @@ class CGraphicsView(QGraphicsView):
         self.scene.setSceneRect(0.0, 0.0, 250.0, 250.0)
         self.setScene(self.scene)
 
-        self.line = None
 #------------------------------------------------------------------------------# mousePressEvent
     def mousePressEvent(self, event):
         super(CGraphicsView, self).mousePressEvent(event)
-        if self.iComm.mode in ["draw", None]:
+        if self.iComm.mode == "draw":
             self.mousePressEvent_Draw(event)
         elif self.iComm.mode == "link":
             self.mousePressEvent_Link(event)
@@ -91,7 +91,7 @@ class CGraphicsView(QGraphicsView):
 #------------------------------------------------------------------------------# mouseReleaseEvent
     def mouseReleaseEvent(self, event):
         super(CGraphicsView, self).mouseReleaseEvent(event)
-        if self.iComm.mode in ["draw", None]:
+        if self.iComm.mode == "draw":
             self.mouseReleaseEvent_Draw(event)
         elif self.iComm.mode == "link":
             self.mouseReleaseEvent_Link(event)
@@ -166,6 +166,9 @@ class CGraphicsView(QGraphicsView):
     def imageControl(self):
         # if the positions are not == then this means we're draggin and we don't
         # want to place an image the start of the dragging point.
+
+        snappedPosition = self.setSnapPosition(self.mousePressPosition)
+
         if not self.clickDragThreshold():
             # we have made a selection box, if any elements are in that box
             # set the selection color.
@@ -175,12 +178,12 @@ class CGraphicsView(QGraphicsView):
         if self.iComm.elementClass:
             newImage = elements.ElementFactory(self,
                                                self.iComm.elementClass,
-                                               self.mousePressPosition)
+                                               snappedPosition)
             # check if new image will collide with other images.
             collisionTest = self.checkForCollision(newImage)
 
         elif self.iComm.mode == None:
-            pos = QPointF(self.mousePressPosition)
+            pos = QPointF(snappedPosition)
             try:
                 collisionTest = self.scene.items(pos)[0]
             except IndexError:
@@ -235,6 +238,7 @@ class CGraphicsView(QGraphicsView):
         gui = image.setObjectGui(self.iComm.ui.Stack)
         self.guiInInspector = gui
         self.iComm.ui.Inspector.setFixedWidth(gui.size().width())
+        self.iComm.ui.Inspector.show()
 
     def assignId(self, element):
         element.eId = str(time.time())
@@ -248,6 +252,25 @@ class CGraphicsView(QGraphicsView):
             if item.collidesWithItem(newImage):
                 return item
         return False
+
+    def setSnapPosition(self, position):
+        x = float(position.x())
+        y = float(position.y())
+
+        lowestX = x//self.xSpacing
+        lowestY = y//self.ySpacing
+
+        if (x/self.xSpacing - x//self.xSpacing) < .5:
+            x = lowestX * self.xSpacing
+        else:
+            x = (lowestX + 1) * self.xSpacing
+
+        if (y/self.ySpacing - y//self.ySpacing) < .5:
+            y = lowestY * self.ySpacing
+        else:
+            y = (lowestY + 1) * self.ySpacing
+
+        return QPointF(x, y)
 
 if __name__ == "__main__":
     import iComm
