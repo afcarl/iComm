@@ -86,11 +86,11 @@ class iComm(QMainWindow):
                 self.objInspect.show()
     # ------------------------------------------------------------------------ # Elements
     def onElementsTriggered(self, event):
-        print self.getMenuBacktrack(event)
         # when any menu selection under Elements has been selected, change
         # the current active element to the selected element.
-        self.elementClass = str(event.text())
-        if self.elementClass in ["Waveguide", "Coax"]:
+        # self.elementClass = str(event.text())
+        self.elementClass = self.getMenuBacktrack(event)
+        if "Waveguide" in self.elementClass or "Coax" in self.elementClass:
             self.mode = "link"
         else:
             self.mode = "draw"
@@ -106,6 +106,7 @@ class iComm(QMainWindow):
         while previousWidget.__class__.__name__ != "QMenuBar":
             backtrack.append(str(previousWidget.title()))
             previousWidget = previousWidget.parent()
+        backtrack.pop()
         return backtrack
 # ---------------------------------------------------------------------------- #
 #

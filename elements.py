@@ -9,13 +9,32 @@ from PyQt4.QtSvg import *
 from Guis.ParameterGuis import hybridParameterGui
 from rdtext import RdText
 
+
+def elementHandler(element):
+
+    elementClass = element.pop()
+    try:
+        elementType = element.pop()
+    except IndexError:
+        return elementClass, None, None
+    try:
+        elementSubType = element.pop()
+    except IndexError:
+        return elementClass, elementType, None
+    return elementClass, elementType, elementSubType
+
+
 class ElementFactory(QGraphicsSvgItem):
 
     # This class allows us to init a class from a string
-    def __init__(self, parent, element, pos):
+    def __init__(self, parent, element, position):
         # parent  := parent obj which is always QGraphicsView for iComm
         # element := string of the element class that we want to initilize
         # pos     := element pos in QPointF form
+
+        print "ElementFactory", element
+        element, elementType, elementSubType = elementHandler(element)
+
         element = re.sub("(-)", "", element)
         self.__class__ = getattr(sys.modules[__name__], element)
 # -----------------------------------------------------------------------------# remove when element images are made
@@ -23,21 +42,26 @@ class ElementFactory(QGraphicsSvgItem):
         element = "Hybrid"
         # For testing only
 # -----------------------------------------------------------------------------# remove when element images are made
-        self.__class__.__init__(self, parent, element, pos)
+        self.__class__.__init__(self,
+                                parent=parent,
+                                element=element,
+                                position=position,
+                                elementType=elementType,
+                                elementSubType=elementSubType)
 
 class BaseElement(QGraphicsSvgItem):
 
-    def __init__(self, parent, element, position):
+    def __init__(self, parent, element, position, image):
 
         self.parent  = parent     # referance to view
         self.element = element
-        self.image   = os.path.join("Images", element.lower(), "hybrid1.2.svg")
+        self.image   = os.path.join("Images", element.lower(), image)
 
         super(BaseElement, self).__init__(self.image)
 
-        self.eId          = None       # custom ID assigned by the user
-        self.freshGui     = True
-        self.enteredDict  = {"id": self.eId,
+        self.eId         = None       # custom ID assigned by the user
+        self.freshGui    = True
+        self.enteredDict = {"id": self.eId,
                              "rd": "xxx"}
 
         # Sets
@@ -221,8 +245,20 @@ class ParameterInputGui(QWidget):
 
 class Hybrid(BaseElement):
 
-    def __init__(self, *args):
-        super(Hybrid, self).__init__(args[0], args[1], args[2])
+    def __init__(self, **kwargs):
+        #~ parent = kwargs["parent"]
+        #~ element = kwargs["element"]
+        #~ position = kwargs["position"]
+        #~ elementType = kwargs["elementType"]
+        #~ elementSubType = kwargs["elementSubType"]
+        elementImage = self.imageHandler(kwargs["elementType"],
+                                         kwargs["elementSubType"])
+
+        super(Hybrid, self).__init__(kwargs["parent"],
+                                     kwargs["element"],
+                                     kwargs["position"],
+                                     elementImage)
+
         self.guiModule   = hybridParameterGui
         self.portRects   = self.getPortRects()
 
@@ -231,10 +267,13 @@ class Hybrid(BaseElement):
         #          port of element connnected to
         #          coax connecting them
         #          side of the coax being used on the key
-        self.connections = {"J1" : [None, None, None, None],
-                            "J2" : [None, None, None, None],
-                            "J3" : [None, None, None, None],
-                            "J4" : [None, None, None, None]}
+        self.connections = {"J1": [None, None, None, None],
+                            "J2": [None, None, None, None],
+                            "J3": [None, None, None, None],
+                            "J4": [None, None, None, None]}
+
+    def imageHandler(elementType, elementSub):
+        return "hybrid%s.%s.svg" % (elementType[0], elementSubType[0])
 
     def getPortRects(self):
         # rect of the ports relative to the image in image coordinates.        # portLocations for switches (testing)
@@ -244,10 +283,10 @@ class Hybrid(BaseElement):
         # this is the initial state run time the can change to represent the
         # block diagram.
         #                           x   y  w  h
-        portRects = {"J1" : QRectF(10, 20, 9, 9),
-                     "J2" : QRectF(20, 10, 9, 9),
-                     "J3" : QRectF(10,  0, 9, 9),
-                     "J4" : QRectF( 0, 10, 9, 9)}
+        portRects = {"J1": QRectF(10, 20, 9, 9),
+                     "J2": QRectF(20, 10, 9, 9),
+                     "J3": QRectF(10,  0, 9, 9),
+                     "J4": QRectF( 0, 10, 9, 9)}
         return portRects
 #------------------------------------------------------------------------------# portLocations for switches (testing)
 
